@@ -17,5 +17,19 @@ export const LoadingOverlay: React.FC<Props> = ({ visible = true, message }) => 
   );
 };
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F9FAFB',
+  },
+  message: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#6B7280',
+  },
+});
+
 // Default export (full-screen replacement — used as a screen)
 export default LoadingOverlay;
