@@ -10,6 +10,8 @@ import ProgramOverviewScreen from '../screens/ProgramOverviewScreen';
 import MealCaptureScreen from '../screens/MealCaptureScreen';
 import NutritionResultScreen from '../screens/NutritionResultScreen';
 import AdherenceDashboard from '../screens/AdherenceDashboard';
+import WorkoutLogScreen from '../screens/WorkoutLogScreen';
+import ClinicalLogScreen from '../screens/ClinicalLogScreen';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -18,6 +20,8 @@ export type RootStackParamList = {
   MealCapture: { memberId: string; memberName: string; programId?: string };
   NutritionResult: { memberId: string; mealId: string; memberName: string };
   AdherenceDashboard: { memberId: string; memberName: string };
+  WorkoutLog: { memberId: string; memberName: string; programId: string };
+  ClinicalLog: { memberId: string; memberName: string; programId: string };
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -74,6 +78,16 @@ export default function AppNavigator() {
               name="AdherenceDashboard"
               component={AdherenceDashboard}
               options={{ title: 'Progress Dashboard' }}
+            />
+            <Stack.Screen
+              name="WorkoutLog"
+              component={WorkoutLogScreen}
+              options={{ title: 'Log Workout' }}
+            />
+            <Stack.Screen
+              name="ClinicalLog"
+              component={ClinicalLogScreen}
+              options={{ title: 'Log Measurement' }}
             />
           </>
         )}

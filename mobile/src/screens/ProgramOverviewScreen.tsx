@@ -194,6 +194,24 @@ export default function ProgramOverviewScreen() {
           );
         })}
 
+        {/* Quick log actions */}
+        <View style={styles.logRow}>
+          <TouchableOpacity
+            style={styles.logBtn}
+            onPress={() => navigation.navigate('WorkoutLog', { memberId, memberName, programId: program.id })}
+          >
+            <Text style={styles.logBtnEmoji}>💪</Text>
+            <Text style={styles.logBtnText}>Log Workout</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.logBtn, styles.logBtnClinical]}
+            onPress={() => navigation.navigate('ClinicalLog', { memberId, memberName, programId: program.id })}
+          >
+            <Text style={styles.logBtnEmoji}>🏥</Text>
+            <Text style={styles.logBtnText}>Log Measurement</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* View Dashboard */}
         <TouchableOpacity
           style={styles.dashBtn}
@@ -263,6 +281,19 @@ const styles = StyleSheet.create({
   compLabel: { flex: 1, fontSize: 15, fontWeight: '700', color: COLORS.text },
   adherenceBadge: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 },
   adherenceBadgeText: { fontSize: 12, fontWeight: '700' },
+  logRow: { flexDirection: 'row', gap: 10, marginTop: 8, marginBottom: 10 },
+  logBtn: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: '#DBEAFE',
+    borderWidth: 1.5,
+    borderColor: '#3B82F6',
+  },
+  logBtnClinical: { backgroundColor: '#EDE9FE', borderColor: '#8B5CF6' },
+  logBtnEmoji: { fontSize: 20, marginBottom: 4 },
+  logBtnText: { fontSize: 12, fontWeight: '700', color: COLORS.text },
   dashBtn: {
     borderWidth: 1.5,
     borderColor: COLORS.primary,

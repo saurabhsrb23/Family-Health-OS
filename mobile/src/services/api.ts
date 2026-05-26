@@ -89,4 +89,20 @@ export const adherenceAPI = {
     api.get(`/members/${memberId}/adherence/nutrition/daily`),
 };
 
+export const workoutsAPI = {
+  log: (memberId: string, data: any) =>
+    api.post(`/members/${memberId}/workouts`, data),
+  list: (memberId: string, params?: any) =>
+    api.get(`/members/${memberId}/workouts`, { params }),
+};
+
+export const measurementsAPI = {
+  log: (memberId: string, data: any) =>
+    api.post(`/members/${memberId}/measurements`, data),
+  list: (memberId: string, params?: any) =>
+    api.get(`/members/${memberId}/measurements`, { params }),
+  latest: (memberId: string) =>
+    api.get(`/members/${memberId}/measurements/latest`),
+};
+
 export default api;
