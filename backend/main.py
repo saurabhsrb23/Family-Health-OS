@@ -66,14 +66,16 @@ async def health_check():
 
 
 # ── Routers ───────────────────────────────────────────────────────────────────
-from routes.auth import router as auth_router  # noqa: E402
+from routes.auth import router as auth_router        # noqa: E402
+from routes.members import router as members_router  # noqa: E402
+from routes.programs import router as programs_router  # noqa: E402
 
 app.include_router(auth_router, prefix="/api/v1")
+app.include_router(members_router, prefix="/api/v1")
+app.include_router(programs_router, prefix="/api/v1")
 
 # Future routers (added per module):
-# from routes.members import router as members_router
-# from routes.programs import router as programs_router
 # from routes.health_data import router as health_data_router
-# app.include_router(members_router, prefix="/api/v1")
-# app.include_router(programs_router, prefix="/api/v1")
+# from routes.adherence import router as adherence_router
 # app.include_router(health_data_router, prefix="/api/v1")
+# app.include_router(adherence_router, prefix="/api/v1")
