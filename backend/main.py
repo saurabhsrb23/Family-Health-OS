@@ -17,10 +17,10 @@ async def lifespan(app: FastAPI):
     # Startup
     settings.upload_dir_path.mkdir(parents=True, exist_ok=True)
     init_db()
-    logger.info("Praan Health API started")
+    logger.info("Family Health OS API started")
     yield
     # Shutdown
-    logger.info("Praan Health API shutting down")
+    logger.info("Family Health OS API shutting down")
 
 
 app = FastAPI(
@@ -65,13 +65,15 @@ async def health_check():
     return {"status": "ok", "version": "1.0.0", "environment": settings.ENVIRONMENT}
 
 
-# ── API router placeholder (routes added in later modules) ────────────────────
-from fastapi import APIRouter
+# ── Routers ───────────────────────────────────────────────────────────────────
+from routes.auth import router as auth_router  # noqa: E402
 
-api_router = APIRouter(prefix="/api/v1")
-# Routers will be included here as each module is built:
-# api_router.include_router(auth_router, prefix="/auth", tags=["Auth"])
-# api_router.include_router(members_router, prefix="/members", tags=["Members"])
-# api_router.include_router(programs_router, prefix="/programs", tags=["Programs"])
+app.include_router(auth_router, prefix="/api/v1")
 
-app.include_router(api_router)
+# Future routers (added per module):
+# from routes.members import router as members_router
+# from routes.programs import router as programs_router
+# from routes.health_data import router as health_data_router
+# app.include_router(members_router, prefix="/api/v1")
+# app.include_router(programs_router, prefix="/api/v1")
+# app.include_router(health_data_router, prefix="/api/v1")

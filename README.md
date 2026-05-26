@@ -177,7 +177,7 @@ All config is in `docker-compose.yml` for local dev. For manual setup, copy `bac
 - [x] Module 1 — Project Foundation & Structure (Docker full-stack setup)
 - [x] Module 2 — Database Models (10 SQLAlchemy models + seed data)
 - [x] Module 3 — Alembic Migrations (manual migration, 11 tables, all indexes + constraints)
-- [ ] Module 4 — Auth (JWT + RBAC)
+- [x] Module 4 — Auth System (JWT access/refresh tokens, bcrypt, Redis blacklist, rate limiting)
 - [ ] Module 4 — Member Management APIs
 - [ ] Module 5 — Care Program APIs
 - [ ] Module 6 — Health Data Logging APIs
