@@ -72,6 +72,8 @@ from routes.programs import router as programs_router            # noqa: E402
 from routes.meals import router as meals_router                  # noqa: E402
 from routes.workouts import router as workouts_router            # noqa: E402
 from routes.measurements import router as measurements_router    # noqa: E402
+from routes.adherence import router as adherence_router          # noqa: E402
+from routes.summaries import router as summaries_router          # noqa: E402
 
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(members_router, prefix="/api/v1")
@@ -79,9 +81,5 @@ app.include_router(programs_router, prefix="/api/v1")
 app.include_router(meals_router, prefix="/api/v1")
 app.include_router(workouts_router, prefix="/api/v1")
 app.include_router(measurements_router, prefix="/api/v1")
-
-# Future routers (added per module):
-# from routes.adherence import router as adherence_router
-# from routes.summaries import router as summaries_router
-# app.include_router(adherence_router, prefix="/api/v1")
-# app.include_router(summaries_router, prefix="/api/v1")
+app.include_router(adherence_router, prefix="/api/v1")
+app.include_router(summaries_router, prefix="/api/v1")

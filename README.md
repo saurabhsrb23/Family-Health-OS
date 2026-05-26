@@ -180,6 +180,7 @@ All config is in `docker-compose.yml` for local dev. For manual setup, copy `bac
 - [x] Module 4 — Auth System (JWT access/refresh tokens, bcrypt, Redis blacklist, rate limiting)
 - [x] Module 5 — Member & Care Program APIs (CRUD, access control, caching, program components)
 - [x] Module 6 — Health Data Logging (meal photo upload + mock AI, workouts, measurements)
+- [x] Module 7 — Adherence Engine + Weekly AI Summaries
 - [ ] Module 4 — Member Management APIs
 - [ ] Module 5 — Care Program APIs
 - [ ] Module 6 — Health Data Logging APIs
