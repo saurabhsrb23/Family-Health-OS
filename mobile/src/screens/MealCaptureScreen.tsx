@@ -15,6 +15,7 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { mealsAPI } from '../services/api';
+import { scrollViewStyle } from '../utils/platform';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 
 const COLORS = {
@@ -148,7 +149,7 @@ export default function MealCaptureScreen() {
   const isProcessing = uploadStatus === 'uploading' || uploadStatus === 'analyzing';
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={[styles.container, scrollViewStyle]} contentContainerStyle={styles.content}>
       {/* Meal type selector */}
       <Text style={styles.sectionLabel}>Meal Type</Text>
       <View style={styles.mealTypeRow}>

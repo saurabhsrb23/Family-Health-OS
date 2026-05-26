@@ -10,6 +10,7 @@ import {
 import { useRoute, useFocusEffect } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import { adherenceAPI } from '../services/api';
+import { cardShadow, scrollViewStyle } from '../utils/platform';
 import ProgressBar from '../components/ProgressBar';
 import { LoadingOverlay } from '../components/LoadingOverlay';
 import type { RootStackParamList } from '../navigation/AppNavigator';
@@ -167,7 +168,7 @@ export default function AdherenceDashboard() {
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, scrollViewStyle]}
       contentContainerStyle={styles.content}
       refreshControl={
         <RefreshControl
@@ -319,11 +320,7 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: 'center',
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 8,
-    elevation: 3,
+    ...cardShadow('md'),
   },
   scoreBig: { fontSize: 64, fontWeight: '900', lineHeight: 72 },
   labelBadge: {
@@ -341,11 +338,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    ...cardShadow('sm'),
   },
   cardTitle: { fontSize: 16, fontWeight: '800', color: COLORS.text, marginBottom: 14 },
   dataRow: {

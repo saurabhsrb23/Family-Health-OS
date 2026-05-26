@@ -11,6 +11,7 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { programsAPI, adherenceAPI } from '../services/api';
+import { cardShadow, scrollViewStyle } from '../utils/platform';
 import ProgressBar from '../components/ProgressBar';
 import { LoadingOverlay } from '../components/LoadingOverlay';
 import type { RootStackParamList } from '../navigation/AppNavigator';
@@ -123,7 +124,7 @@ export default function ProgramOverviewScreen() {
   return (
     <>
       <ScrollView
-        style={styles.container}
+        style={[styles.container, scrollViewStyle]}
         contentContainerStyle={styles.content}
         refreshControl={
           <RefreshControl
@@ -227,11 +228,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 8,
-    elevation: 3,
+    ...cardShadow('md'),
   },
   headerTop: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
   phaseBadge: {
@@ -259,11 +256,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    ...cardShadow('sm'),
   },
   compHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
   compIcon: { fontSize: 22, marginRight: 10 },

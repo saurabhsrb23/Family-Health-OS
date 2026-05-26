@@ -11,6 +11,7 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { mealsAPI, adherenceAPI } from '../services/api';
+import { cardShadow, scrollViewStyle } from '../utils/platform';
 import ProgressBar from '../components/ProgressBar';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 
@@ -131,7 +132,7 @@ export default function NutritionResultScreen() {
   const proteinPct = Math.min(100, (proteinLogged / proteinTarget) * 100);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={[styles.container, scrollViewStyle]} contentContainerStyle={styles.content}>
       {/* Success header */}
       <View style={styles.successCard}>
         <Text style={styles.successEmoji}>✅</Text>
@@ -289,11 +290,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
+    ...cardShadow('sm'),
   },
   cardTitle: { fontSize: 14, fontWeight: '700', color: COLORS.textSecondary, marginBottom: 12 },
   calorieValue: { fontSize: 52, fontWeight: '900', color: COLORS.primary, lineHeight: 60 },

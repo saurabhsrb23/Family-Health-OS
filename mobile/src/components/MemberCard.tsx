@@ -1,5 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
+import { cardShadow } from '../utils/platform';
 
 interface ActiveProgram {
   id: string;
@@ -96,11 +97,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginHorizontal: 16,
     marginVertical: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 3,
+    ...cardShadow('md'),
   },
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
   avatar: {
