@@ -22,14 +22,25 @@ Connects to the FastAPI backend for JWT auth, meal photo upload, AI nutrition ex
 
 ## 1. Screens
 
+### Core Screens
+
 | Screen | File | Description |
 |---|---|---|
 | **Login** | `LoginScreen.tsx` | Email/password login · JWT token saved to AsyncStorage |
-| **Member List** | `MemberListScreen.tsx` | All family members · program progress bars · pull-to-refresh |
+| **Member List** | `MemberListScreen.tsx` | All family members · program progress bars · pull-to-refresh · "+" to enroll |
 | **Program Overview** | `ProgramOverviewScreen.tsx` | Day counter · phase · component adherence cards · FAB to log meal |
 | **Meal Capture** | `MealCaptureScreen.tsx` | Meal type selector · camera or gallery · upload · AI polling |
 | **Nutrition Result** | `NutritionResultScreen.tsx` | AI-extracted calories/protein/carbs/fat · daily progress bar |
 | **Adherence Dashboard** | `AdherenceDashboard.tsx` | Overall score · nutrition/strength/clinical cards · 7-day bar chart |
+
+### Enrollment Flow (UI/UX Requirement 3.2)
+
+| Screen | File | Description |
+|---|---|---|
+| **Add Member** | `AddMemberScreen.tsx` | Live-initial avatar · name/DOB/phone · relationship & gender selectors · POST /members |
+| **Create Program** | `CreateProgramScreen.tsx` | Pre-filled 90-day title · start date · live end-date preview · no API call yet |
+| **Configure Components** | `ConfigureComponentsScreen.tsx` | Nutrition / Strength / Clinical config cards · all defaults pre-filled · POST /members/{id}/programs |
+| **Enrollment Success** | `EnrollmentSuccessScreen.tsx` | Success confirmation · navigation.reset() back to MemberList · no back navigation |
 
 ---
 
@@ -176,6 +187,8 @@ Find your LAN IP:
 
 **Login credentials:** `demo@familyhealthos.com` / `Demo@1234`
 
+### Daily Tracking Flow
+
 | Step | Screen | What to do |
 |---|---|---|
 | 1 | Login | Enter credentials or tap "Quick Demo Login" |
@@ -185,6 +198,16 @@ Find your LAN IP:
 | 5 | AI Analysis | Tap "✨ Analyze Meal" → 2s mock AI → see extracted macros |
 | 6 | Nutrition Result | See calories, protein, carbs, fat + daily progress bar |
 | 7 | Dashboard | Tap "📊 View Dashboard" → overall score + 7-day trend chart |
+
+### Enrollment Flow (Add New Member)
+
+| Step | Screen | What to do |
+|---|---|---|
+| 1 | Member List | Tap the **+** icon in the top-right header |
+| 2 | Add Member | Type a name (avatar shows initials live) · select Relationship · tap "Continue →" |
+| 3 | Create Program | Title pre-filled · start date defaults to today · end date updates live · tap "Configure Components →" |
+| 4 | Configure Components | Adjust nutrition / strength / clinical targets (all pre-filled with defaults) · tap "🚀 Launch Program" |
+| 5 | Enrollment Success | Confirmation screen · tap "View Program" to return to Member List |
 
 ---
 
@@ -202,6 +225,11 @@ Find your LAN IP:
 | **FAB navigation** | Floating + button on Program Overview → direct to Meal Capture |
 | **Web + native support** | Photo upload uses `fetch → Blob` on web, `{ uri, name, type }` on native |
 | **Audit-safe navigation** | `memberName` flows through the full navigation stack — no missing params |
+| **Enrollment flow** | 4-screen wizard: Add Member → Create Program → Configure Components → Success |
+| **Live avatar initials** | Avatar circle on Add Member updates with initials as user types the name |
+| **Live end-date preview** | Create Program computes end date (start + 89 days) live as user edits start date |
+| **Pre-filled defaults** | All enrollment fields have sensible defaults — user can tap through in seconds |
+| **Stack reset on success** | EnrollmentSuccess uses `navigation.reset()` — back button cannot return to config screens |
 
 ---
 
@@ -217,36 +245,54 @@ mobile/
     ├── services/
     │   └── api.ts                 # Axios instance · request/response interceptors · API methods
     │                              #   authAPI, membersAPI, programsAPI, mealsAPI, adherenceAPI
+    │                              #   membersAPI.create · programsAPI.create
     ├── context/
     │   └── AuthContext.tsx        # Auth state · login/logout · AsyncStorage persistence
     ├── navigation/
     │   └── AppNavigator.tsx       # Stack navigator · auth-gated routing · typed param list
+    │                              #   RootStackParamList includes all 10 routes
     ├── components/
     │   ├── MemberCard.tsx         # Member card: avatar, relationship badge, progress, Log Meal btn
     │   ├── ProgressBar.tsx        # Reusable bar: value, color, label, height props
     │   └── LoadingOverlay.tsx     # Full-screen spinner with optional message
     └── screens/
         ├── LoginScreen.tsx        # Email/password form + quick-fill demo button
-        ├── MemberListScreen.tsx   # FlatList of MemberCards + Sign Out button
+        ├── MemberListScreen.tsx   # FlatList of MemberCards + "+" header button + Sign Out
         ├── ProgramOverviewScreen.tsx  # Program header + component adherence cards + FAB
         ├── MealCaptureScreen.tsx  # Meal type picker + image picker + upload + polling
         ├── NutritionResultScreen.tsx  # Macro display + protein progress bar
-        └── AdherenceDashboard.tsx # Score card + nutrition/strength/clinical cards + bar chart
+        ├── AdherenceDashboard.tsx # Score card + nutrition/strength/clinical cards + bar chart
+        ├── WorkoutLogScreen.tsx   # Session type · energy · exercises (add/remove) · POST /workouts
+        ├── ClinicalLogScreen.tsx  # Measurement type tabs · BP/weight/glucose fields · POST /measurements
+        │
+        │   ── Enrollment Flow ──────────────────────────────────────────────────
+        ├── AddMemberScreen.tsx          # Live avatar · member details · relationship/gender
+        ├── CreateProgramScreen.tsx      # Program title · start date · live 90-day end date
+        ├── ConfigureComponentsScreen.tsx  # Nutrition/Strength/Clinical config · POST /programs
+        └── EnrollmentSuccessScreen.tsx  # Success confirmation · stack reset to MemberList
 ```
 
 ### Navigation Flow
 
 ```
 Login
-  └── MemberList
-        ├── ProgramOverview (tap member card)
-        │     ├── MealCapture (tap FAB)
-        │     │     └── NutritionResult (after upload)
-        │     │           └── AdherenceDashboard (tap "View Dashboard")
-        │     └── AdherenceDashboard (tap "View Full Dashboard")
-        └── MealCapture (tap "Log Meal" on member card)
-              └── NutritionResult
-                    └── AdherenceDashboard
+  └── MemberList ──── tap "+" header ──────────────────────────────────────────┐
+        ├── ProgramOverview (tap member card)                                   │
+        │     ├── MealCapture (tap FAB)                                         │
+        │     │     └── NutritionResult (after upload)                         │
+        │     │           └── AdherenceDashboard (tap "View Dashboard")        │
+        │     └── AdherenceDashboard (tap "View Full Dashboard")               │
+        └── MealCapture (tap "Log Meal" on member card)                        │
+              └── NutritionResult                                               │
+                    └── AdherenceDashboard                                     │
+                                                                               │
+  ┌────────────────────────────────────────────────────────────────────────────┘
+  │  Enrollment Flow
+  └── AddMember
+        └── CreateProgram
+              └── ConfigureComponents
+                    └── EnrollmentSuccess
+                          └── MemberList  (navigation.reset — no back)
 ```
 
 ---

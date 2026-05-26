@@ -937,40 +937,65 @@ Cloud Scheduler fires `POST /api/v1/members/*/summaries/generate` at 23:00 IST e
   [Login Screen]
        │
        ▼
-  [Member List]  ──── tap "+ Add Member" ────►  [Add Member Form]
+  [Member List]  ──── tap "+" header icon ────►  [Add Member]      Screen 1
                                                       │
                                               ┌───────┴────────┐
-                                              │  Name          │
-                                              │  Relationship  │
+                                              │  Live avatar   │
+                                              │  (initials)    │
+                                              │  Name *        │
                                               │  Date of Birth │
-                                              │  Gender        │
                                               │  Phone         │
+                                              │  Relationship *│
+                                              │  (Self/Spouse/ │
+                                              │   Parent/Child)│
+                                              │  Gender        │
                                               └───────┬────────┘
-                                                      │ tap "Save"
+                                                      │ tap "Continue →"
+                                                      │ POST /members
                                                       ▼
-                                              [Create Program]
+                                              [Create Program]   Screen 2
                                                       │
                                               ┌───────┴────────┐
                                               │  Program Title │
+                                              │  (pre-filled)  │
+                                              │  Description   │
                                               │  Start Date    │
-                                              │  Duration: 90d │
+                                              │  (today)       │
+                                              │  ┌──────────┐  │
+                                              │  │📅 90 days│  │
+                                              │  │End: date │  │
+                                              │  │(live)    │  │
+                                              │  └──────────┘  │
                                               └───────┬────────┘
-                                                      │ tap "Configure"
+                                                      │ tap "Configure Components →"
+                                                      │ (no API call yet)
                                                       ▼
-                                         [Configure Components]
+                                         [Configure Components] Screen 3
                                                       │
                                           ┌───────────┼───────────┐
                                           ▼           ▼           ▼
-                                    [Nutrition]  [Strength]  [Clinical]
-                                    Cal target   Sessions    BP checks
-                                    Protein goal Duration    Weight log
+                                    [🥗 Nutrition] [💪 Strength] [🏥 Clinical]
+                                    Calories kcal  Sessions/wk  BP checks/wk
+                                    Protein g      Duration min  Weight chk/wk
+                                    Meals/day
                                           │           │           │
                                           └───────────┴───────────┘
-                                                      │ tap "Launch Program"
+                                                      │ tap "🚀 Launch Program"
+                                                      │ POST /members/{id}/programs
                                                       ▼
-                                              [Program Overview]
-                                              Day 1 · Phase 1
-                                              All components active
+                                         [Enrollment Success]    Screen 4
+                                              │
+                                              │  ✓ (green circle)
+                                              │  Program Launched! 🎉
+                                              │  {memberName} is now enrolled
+                                              │  📋 {programTitle}
+                                              │  📅 90-day program starts today
+                                              │  🥗 Nutrition · 💪 Strength · 🏥 Clinical
+                                              │
+                                              ├── [View Program]
+                                              │    → navigation.reset() → MemberList
+                                              └── [Add Another Member]
+                                                   → AddMember (new enrollment)
 ```
 
 ---
@@ -1027,7 +1052,7 @@ Cloud Scheduler fires `POST /api/v1/members/*/summaries/generate` at 23:00 IST e
 
 ```
 ┌──────────────────────────────────┐
-│ Family Health OS      [Sign Out] │
+│ Family Health OS    [+] [Sign Out]│  ◄── + opens enrollment flow
 ├──────────────────────────────────┤
 │ 2 members                        │
 │                                  │
@@ -1210,7 +1235,194 @@ Cloud Scheduler fires `POST /api/v1/members/*/summaries/generate` at 23:00 IST e
 └──────────────────────────────────┘
 ```
 
-#### Screen 5 — Workout Log
+#### Screen 5 — Add Member (Enrollment Step 1)
+
+```
+┌──────────────────────────────────┐
+│ ◄  Add Family Member             │
+├──────────────────────────────────┤
+│                                  │
+│           ┌──────┐               │
+│           │  RS  │  ◄── live initials, green circle
+│           └──────┘               │
+│                                  │
+│ ┌──────────────────────────────┐ │
+│ │ Member Details               │ │
+│ │                              │ │
+│ │ Full Name *                  │ │
+│ │ ┌──────────────────────────┐ │ │
+│ │ │ Rahul Sharma             │ │ │
+│ │ └──────────────────────────┘ │ │
+│ │                              │ │
+│ │ Date of Birth                │ │
+│ │ ┌──────────────────────────┐ │ │
+│ │ │ YYYY-MM-DD               │ │ │
+│ │ └──────────────────────────┘ │ │
+│ │                              │ │
+│ │ Phone                        │ │
+│ │ ┌──────────────────────────┐ │ │
+│ │ │                          │ │ │
+│ │ └──────────────────────────┘ │ │
+│ └──────────────────────────────┘ │
+│                                  │
+│ ┌──────────────────────────────┐ │
+│ │ Relationship *               │ │
+│ │ ┌──────┐┌──────┐┌──────┐┌──┐│ │
+│ │ │ Self ││Spouse││Parent││Ch ││ │
+│ │ └──────┘└──────┘└──────┘└──┘│ │
+│ │  selected = green fill       │ │
+│ └──────────────────────────────┘ │
+│                                  │
+│ ┌──────────────────────────────┐ │
+│ │ Gender                       │ │
+│ │ ┌────────────┐┌────────────┐ │ │
+│ │ │    Male    ││   Female   │ │ │
+│ │ └────────────┘└────────────┘ │ │
+│ └──────────────────────────────┘ │
+│                                  │
+│  ┌────────────────────────────┐  │
+│  │        Continue →          │  │  ◄── disabled until name + relationship
+│  └────────────────────────────┘  │
+└──────────────────────────────────┘
+```
+
+#### Screen 6 — Create Program (Enrollment Step 2)
+
+```
+┌──────────────────────────────────┐
+│ ◄  Create Program                │
+├──────────────────────────────────┤
+│  Setting up program for Rahul    │
+│                                  │
+│ ┌──────────────────────────────┐ │
+│ │ Program Details              │ │
+│ │                              │ │
+│ │ Program Title *              │ │
+│ │ ┌──────────────────────────┐ │ │
+│ │ │ Rahul's 90-Day Program   │ │ │  ◄── pre-filled, editable
+│ │ └──────────────────────────┘ │ │
+│ │                              │ │
+│ │ Description                  │ │
+│ │ ┌──────────────────────────┐ │ │
+│ │ │                          │ │ │
+│ │ │  (optional, 3 lines)     │ │ │
+│ │ └──────────────────────────┘ │ │
+│ │                              │ │
+│ │ Start Date                   │ │
+│ │ ┌──────────────────────────┐ │ │
+│ │ │ 2026-05-27               │ │ │  ◄── today, editable
+│ │ └──────────────────────────┘ │ │
+│ └──────────────────────────────┘ │
+│                                  │
+│ ┌──────────────────────────────┐ │
+│ │ 📅 Program runs for 90 days  │ │  ◄── light green card
+│ │ Ends on: 2026-08-24          │ │  ◄── updates live
+│ └──────────────────────────────┘ │
+│                                  │
+│  ┌────────────────────────────┐  │
+│  │  Configure Components →    │  │
+│  └────────────────────────────┘  │
+└──────────────────────────────────┘
+```
+
+#### Screen 7 — Configure Components (Enrollment Step 3)
+
+```
+┌──────────────────────────────────┐
+│ ◄  Configure Program             │
+├──────────────────────────────────┤
+│  Configure Program Components    │
+│  Rahul's 90-Day Program          │
+│                                  │
+│ ┌──────────────────────────────┐ │
+│ ║ 🥗 Nutrition          (green)║ │  ◄── green left border
+│ │                              │ │
+│ │ Daily Calorie Target         │ │
+│ │ ┌──────────────┐  kcal       │ │
+│ │ │    2000      │             │ │
+│ │ └──────────────┘             │ │
+│ │                              │ │
+│ │ Daily Protein Target         │ │
+│ │ ┌──────────────┐  grams      │ │
+│ │ │     60       │             │ │
+│ │ └──────────────┘             │ │
+│ │                              │ │
+│ │ Meals Per Day                │ │
+│ │ ┌──┐  ┌──┐  ┌──┐            │ │
+│ │ │ 2│  │ 3│  │ 4│            │ │  ◄── 3 selected (green)
+│ │ └──┘  └──┘  └──┘            │ │
+│ └──────────────────────────────┘ │
+│                                  │
+│ ┌──────────────────────────────┐ │
+│ ║ 💪 Strength Training  (blue) ║ │  ◄── blue left border
+│ │                              │ │
+│ │ Sessions Per Week            │ │
+│ │ ┌──┐ ┌──┐ ┌──┐ ┌──┐         │ │
+│ │ │ 2│ │ 3│ │ 4│ │ 5│         │ │  ◄── 4 selected
+│ │ └──┘ └──┘ └──┘ └──┘         │ │
+│ │                              │ │
+│ │ Session Duration             │ │
+│ │ ┌──────────────┐  minutes    │ │
+│ │ │     60       │             │ │
+│ │ └──────────────┘             │ │
+│ └──────────────────────────────┘ │
+│                                  │
+│ ┌──────────────────────────────┐ │
+│ ║ 🏥 Clinical Monitoring(purp) ║ │  ◄── purple left border
+│ │                              │ │
+│ │ BP Checks Per Week           │ │
+│ │ ┌──┐  ┌──┐  ┌──┐            │ │
+│ │ │ 1│  │ 2│  │ 3│            │ │  ◄── 2 selected
+│ │ └──┘  └──┘  └──┘            │ │
+│ │                              │ │
+│ │ Weight Checks Per Week       │ │
+│ │ ┌──┐  ┌──┐  ┌──┐            │ │
+│ │ │ 1│  │ 2│  │ 3│            │ │  ◄── 3 selected
+│ │ └──┘  └──┘  └──┘            │ │
+│ └──────────────────────────────┘ │
+│                                  │
+│  ┌────────────────────────────┐  │
+│  │     🚀 Launch Program      │  │  ◄── POST /programs
+│  └────────────────────────────┘  │
+└──────────────────────────────────┘
+```
+
+#### Screen 8 — Enrollment Success (Enrollment Step 4)
+
+```
+┌──────────────────────────────────┐
+│          Enrolled!               │  ◄── no back button (headerLeft: null)
+├──────────────────────────────────┤
+│                                  │
+│                                  │
+│             ┌────┐               │
+│             │  ✓ │               │  ◄── large green circle
+│             └────┘               │
+│                                  │
+│       Program Launched! 🎉       │
+│                                  │
+│    Rahul is now enrolled         │
+│                                  │
+│ ┌──────────────────────────────┐ │
+│ │ 📋 Rahul's 90-Day Program    │ │  ◄── light green card
+│ │ 📅 90-day program starts     │ │
+│ │    today                     │ │
+│ │ 🥗 Nutrition · 💪 Strength   │ │
+│ │    · 🏥 Clinical             │ │
+│ └──────────────────────────────┘ │
+│                                  │
+│  ┌────────────────────────────┐  │
+│  │        View Program        │  │  ◄── navigation.reset() → MemberList
+│  └────────────────────────────┘  │
+│                                  │
+│  ┌────────────────────────────┐  │
+│  │    Add Another Member      │  │  ◄── outlined, → AddMember
+│  └────────────────────────────┘  │
+│                                  │
+└──────────────────────────────────┘
+```
+
+#### Screen 9 — Workout Log
 
 ```
 ┌──────────────────────────────────┐
@@ -1260,7 +1472,7 @@ Cloud Scheduler fires `POST /api/v1/members/*/summaries/generate` at 23:00 IST e
 └──────────────────────────────────┘
 ```
 
-#### Screen 6 — Clinical Log
+#### Screen 10 — Clinical Log
 
 ```
 ┌──────────────────────────────────┐
@@ -1316,12 +1528,20 @@ Cloud Scheduler fires `POST /api/v1/members/*/summaries/generate` at 23:00 IST e
 | Clinical UX | Measurement type tabs + conditional fields | BP needs 2 fields, weight needs 1, glucose needs 1 — conditional rendering avoids clutter |
 | BP reference range | Inline "Normal: 90/60–120/80 mmHg" tip | First-time users often don't know normal ranges; reduces support queries |
 | Color coding | Blue for strength (#3B82F6), Purple for clinical (#8B5CF6) | Consistent with AdherenceDashboard component colors; builds visual language |
+| Enrollment entry point | "+" icon in header (Member List) | Header placement is always visible; circle button with translucent bg matches header style |
+| Live avatar initials | Computed from name input in real-time | Instant visual feedback makes the Add Member form feel responsive and personal |
+| Enrollment API split | POST /members on screen 1; POST /programs on screen 3 | Allows the user to back-edit program config without re-creating the member |
+| Create Program: no API call | Navigate forward only; API fires on Configure screen | User may abandon program config; member should exist before program is committed |
+| EnrollmentSuccess back prevention | `navigation.reset()` clears stack | Prevents user returning to ConfigureComponents and double-submitting the program |
+| Enrollment defaults | All fields pre-filled (2000 kcal, 60g protein, 4 sessions, etc.) | User can tap through the full flow in under 10 seconds; overrides are optional |
+| Component card borders | Left color border (green/blue/purple) per component | Visual distinction between the 3 components without requiring icons or headers alone |
 
 ---
 
-*Document version: 1.3 — updated at completion of Modules 1–13*
+*Document version: 1.4 — updated at completion of Modules 1–14*
 *Changes in v1.1: API field alignment, mobile bug fixes, dashboard wiring*
 *Changes in v1.2: WorkoutLogScreen + ClinicalLogScreen wireframes; latest BP/weight in adherence report*
 *Changes in v1.3: Historical week navigation (report_date param); 6 UI screens documented*
+*Changes in v1.4: Enrollment flow (UI/UX req 3.2) — 4-screen wizard: AddMember → CreateProgram → ConfigureComponents → EnrollmentSuccess; Member List "+" header button; programsAPI.create; 4 new screen wireframes; updated design decisions*
 *Author: Founding Full-Stack Engineer take-home assignment*
 *Stack: Python + FastAPI + PostgreSQL + Redis + React Native + GCP*
