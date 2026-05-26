@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "Family Health OS",
+    "slug": "family-health-os",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "bundleIdentifier": "com.familyhealthos.app",
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSCameraUsageDescription": "We need camera access to capture your meal photos for nutrition tracking.",
+        "NSPhotoLibraryUsageDescription": "We need photo library access to select meal photos.",
+        "NSPhotoLibraryAddUsageDescription": "We need permission to save meal photos."
+      }
+    },
+    "android": {
+      "package": "com.familyhealthos.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#10B981",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png"
+      },
+      "permissions": ["android.permission.CAMERA", "android.permission.READ_EXTERNAL_STORAGE"]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        { "cameraPermission": "Allow Family Health OS to access your camera." }
+      ],
+      [
+        "expo-image-picker",
+        { "photosPermission": "Allow Family Health OS to access your photos." }
+      ]
+    ]
+  }
+}

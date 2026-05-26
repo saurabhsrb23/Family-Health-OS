@@ -122,7 +122,16 @@ Family-Health-OS/
 │   ├── utils/               # Shared helpers
 │   ├── alembic/             # DB migrations (auto-generated)
 │   └── uploads/             # Local meal photo storage
-└── mobile/                  # React Native + Expo app (Module 11)
+└── mobile/                  # React Native + Expo app (Module 9)
+    ├── App.tsx              # Root: GestureHandlerRootView + AuthProvider + AppNavigator
+    ├── app.json             # Expo config: name, permissions, icons
+    ├── src/
+    │   ├── services/api.ts  # Axios instance, interceptors, typed API methods
+    │   ├── context/         # AuthContext (JWT persistence via AsyncStorage)
+    │   ├── navigation/      # AppNavigator (Stack + Bottom Tabs)
+    │   ├── components/      # ProgressBar, LoadingOverlay, MemberCard
+    │   └── screens/         # Login, MemberList, ProgramOverview, MealCapture,
+    │                        # NutritionResult, AdherenceDashboard
 ```
 
 ---
@@ -137,6 +146,46 @@ Family-Health-OS/
 | Auth | JWT (python-jose + passlib bcrypt) |
 | Mobile | React Native + Expo |
 | Containerization | Docker + Docker Compose |
+
+---
+
+## Running the Mobile App
+
+### Prerequisites
+- Node.js 18+
+- Expo CLI: `npm install -g expo-cli`
+- Android Studio (for Android emulator) or Xcode (for iOS simulator)
+- Backend running via `docker-compose up --build`
+
+### Setup & Run
+
+```bash
+cd mobile
+npm install
+
+# Android emulator (API URL pre-set to 10.0.2.2:8000)
+npx expo start --android
+
+# iOS simulator
+npx expo start --ios
+
+# Expo Go on physical device (change API_BASE_URL in src/services/api.ts to your LAN IP)
+npx expo start
+```
+
+### Demo Login
+- **Email:** demo@familyhealthos.com
+- **Password:** Demo@1234
+
+### Screens
+| Screen | Description |
+|---|---|
+| Login | JWT auth with AsyncStorage token persistence |
+| Member List | All family members with active program progress |
+| Program Overview | 90-day program details, phases, component config |
+| Meal Capture | Camera / gallery photo → AI nutrition extraction |
+| Nutrition Result | Real-time polling + macronutrient breakdown |
+| Adherence Dashboard | Per-member score, trend, nutrition/strength/clinical breakdown |
 
 ---
 
@@ -182,11 +231,4 @@ All config is in `docker-compose.yml` for local dev. For manual setup, copy `bac
 - [x] Module 6 — Health Data Logging (meal photo upload + mock AI, workouts, measurements)
 - [x] Module 7 — Adherence Engine + Weekly AI Summaries
 - [x] Module 8 — Middleware, Error Handling & Rich Seed Data
-- [ ] Module 4 — Member Management APIs
-- [ ] Module 5 — Care Program APIs
-- [ ] Module 6 — Health Data Logging APIs
-- [ ] Module 7 — Image Upload + Mock AI Extraction
-- [ ] Module 8 — Adherence Calculation
-- [ ] Module 9 — AI Weekly Summary
-- [ ] Module 10 — Caching Layer
-- [ ] Module 11 — React Native App
+- [x] Module 9 — React Native Mobile App (Expo, navigation, all screens)
