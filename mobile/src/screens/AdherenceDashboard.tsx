@@ -5,8 +5,9 @@ import {
   Text,
   StyleSheet,
   RefreshControl,
+  TouchableOpacity,
 } from 'react-native';
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useFocusEffect } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import { adherenceAPI } from '../services/api';
 import ProgressBar from '../components/ProgressBar';
@@ -116,22 +117,42 @@ export default function AdherenceDashboard() {
   const [report, setReport] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState('');
 
   const fetchReport = useCallback(async () => {
+    setError('');
     try {
       const res = await adherenceAPI.getReport(memberId);
       setReport(res.data);
-    } catch {
-      // show empty state
+    } catch (err: any) {
+      setError(err?.response?.data?.detail ?? 'Could not load dashboard.');
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   }, [memberId]);
 
-  useEffect(() => { fetchReport(); }, [fetchReport]);
+  // useFocusEffect re-fetches every time the screen comes into focus
+  // (covers navigate from NutritionResult even if screen is already mounted)
+  useFocusEffect(useCallback(() => {
+    setLoading(true);
+    fetchReport();
+  }, [fetchReport]));
 
   if (loading) return <LoadingOverlay visible message="Loading dashboard…" />;
+
+  if (error) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.errorEmoji}>⚠️</Text>
+        <Text style={styles.errorTitle}>Could not load dashboard</Text>
+        <Text style={styles.errorSub}>{error}</Text>
+        <TouchableOpacity style={styles.retryBtn} onPress={() => { setLoading(true); fetchReport(); }}>
+          <Text style={styles.retryBtnText}>Try Again</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   const score = report?.overall_pct ?? 0;
   const sColor = scoreColor(score);
@@ -352,4 +373,16 @@ const styles = StyleSheet.create({
   clinicalStatLabel: { fontSize: 12, color: COLORS.textSecondary, marginBottom: 4 },
   clinicalStatValue: { fontSize: 18, fontWeight: '800', color: COLORS.text },
   clinicalDivider: { width: 1, backgroundColor: COLORS.border, marginVertical: 4 },
+  centered: {
+    flex: 1, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: COLORS.background, padding: 32,
+  },
+  errorEmoji: { fontSize: 40, marginBottom: 12 },
+  errorTitle: { fontSize: 18, fontWeight: '700', color: COLORS.text, marginBottom: 6 },
+  errorSub: { fontSize: 14, color: COLORS.textSecondary, textAlign: 'center', marginBottom: 20 },
+  retryBtn: {
+    backgroundColor: COLORS.primary, borderRadius: 10,
+    paddingHorizontal: 32, paddingVertical: 12,
+  },
+  retryBtnText: { color: COLORS.white, fontWeight: '700', fontSize: 15 },
 });
