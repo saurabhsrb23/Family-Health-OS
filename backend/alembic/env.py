@@ -5,18 +5,16 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 from alembic import context
 
-# Make sure backend/ is on the path so we can import our modules
+# Add backend directory to path so we can import our modules
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from config import settings
 from database import Base
-
-# Import all models so Alembic can detect them for autogenerate
-import models  # noqa: F401
+from config import settings
+import models  # noqa: F401 — imports all models so Alembic detects them
 
 config = context.config
 
-# Override sqlalchemy.url from our settings (reads from env var)
+# Override sqlalchemy.url from settings (reads DATABASE_URL env var)
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 if config.config_file_name is not None:
@@ -32,6 +30,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        compare_type=True,
     )
     with context.begin_transaction():
         context.run_migrations()
@@ -44,7 +43,11 @@ def run_migrations_online() -> None:
         poolclass=pool.NullPool,
     )
     with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
+        context.configure(
+            connection=connection,
+            target_metadata=target_metadata,
+            compare_type=True,
+        )
         with context.begin_transaction():
             context.run_migrations()
 
