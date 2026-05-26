@@ -85,6 +85,8 @@ export const mealsAPI = {
 export const adherenceAPI = {
   getReport: (memberId: string) =>
     api.get(`/members/${memberId}/adherence`),
+  getDailyNutrition: (memberId: string) =>
+    api.get(`/members/${memberId}/adherence/nutrition/daily`),
 };
 
 export default api;

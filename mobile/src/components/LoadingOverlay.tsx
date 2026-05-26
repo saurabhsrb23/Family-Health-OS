@@ -2,29 +2,20 @@ import React from 'react';
 import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
 
 interface Props {
+  visible?: boolean;
   message?: string;
 }
 
-export default function LoadingOverlay({ message }: Props) {
+// Named export (overlay mode — used inline with visible prop)
+export const LoadingOverlay: React.FC<Props> = ({ visible = true, message }) => {
+  if (!visible) return null;
   return (
     <View style={styles.container}>
       <ActivityIndicator size="large" color="#10B981" />
       {message && <Text style={styles.message}>{message}</Text>}
     </View>
   );
-}
+};
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  message: {
-    marginTop: 16,
-    fontSize: 15,
-    color: '#6B7280',
-    textAlign: 'center',
-  },
-});
+// Default export (full-screen replacement — used as a screen)
+export default LoadingOverlay;

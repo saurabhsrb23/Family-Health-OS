@@ -5,225 +5,354 @@ import {
   Text,
   StyleSheet,
   RefreshControl,
-  TouchableOpacity,
-  Alert,
 } from 'react-native';
-import { membersAPI, adherenceAPI } from '../services/api';
-import LoadingOverlay from '../components/LoadingOverlay';
+import { useRoute } from '@react-navigation/native';
+import type { RouteProp } from '@react-navigation/native';
+import { adherenceAPI } from '../services/api';
 import ProgressBar from '../components/ProgressBar';
+import { LoadingOverlay } from '../components/LoadingOverlay';
+import type { RootStackParamList } from '../navigation/AppNavigator';
 
-interface AdherenceReport {
-  overall_score: number;
-  nutrition: { score: number; meals_logged: number; target: number };
-  strength: { score: number; sessions_completed: number; target: number };
-  clinical: { score: number; measurements_taken: number; target: number };
-  rolling: { trend: string; current_avg: number; previous_avg: number };
-}
-
-const TREND_ICON: Record<string, string> = {
-  improving: '📈',
-  declining: '📉',
-  stable: '➡️',
+const COLORS = {
+  primary: '#10B981',
+  primaryLight: '#D1FAE5',
+  primaryDark: '#065F46',
+  warning: '#F59E0B',
+  danger: '#EF4444',
+  text: '#111827',
+  textSecondary: '#6B7280',
+  background: '#F9FAFB',
+  white: '#FFFFFF',
+  border: '#E5E7EB',
 };
 
+type Route = RouteProp<RootStackParamList, 'AdherenceDashboard'>;
+
+function scoreColor(score: number): string {
+  if (score >= 80) return COLORS.primary;
+  if (score >= 50) return COLORS.warning;
+  return COLORS.danger;
+}
+
+function scoreLabel(score: number): { text: string; color: string; bg: string } {
+  if (score >= 80) return { text: 'On Track', color: COLORS.primaryDark, bg: COLORS.primaryLight };
+  if (score >= 50) return { text: 'Needs Attention', color: '#92400E', bg: '#FEF3C7' };
+  return { text: 'At Risk', color: '#991B1B', bg: '#FEE2E2' };
+}
+
+function trendIcon(trend?: string): string {
+  if (trend === 'improving') return '↑ Improving';
+  if (trend === 'declining') return '↓ Declining';
+  return '→ Stable';
+}
+
+function trendColor(trend?: string): string {
+  if (trend === 'improving') return COLORS.primary;
+  if (trend === 'declining') return COLORS.danger;
+  return COLORS.warning;
+}
+
+// Simple 7-bar chart using Views
+function BarChart({ bars }: { bars: { pct: number; color: string }[] }) {
+  const MAX_HEIGHT = 60;
+  return (
+    <View style={barStyles.container}>
+      {bars.map((bar, i) => (
+        <View key={i} style={barStyles.barWrap}>
+          <View
+            style={[
+              barStyles.bar,
+              {
+                height: Math.max(4, (bar.pct / 100) * MAX_HEIGHT),
+                backgroundColor: bar.color,
+              },
+            ]}
+          />
+          <Text style={barStyles.dayLabel}>
+            {['M', 'T', 'W', 'T', 'F', 'S', 'S'][i] ?? ''}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+const barStyles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    height: 80,
+    marginTop: 8,
+  },
+  barWrap: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', marginHorizontal: 2 },
+  bar: { width: '100%', borderRadius: 3, minHeight: 4 },
+  dayLabel: { fontSize: 10, color: COLORS.textSecondary, marginTop: 4 },
+});
+
+// Build 7-bar data from rolling adherence
+function buildBars(rolling: any): { pct: number; color: string }[] {
+  if (!rolling) {
+    return Array(7).fill({ pct: 0, color: COLORS.border });
+  }
+  // Use last_3_days_avg for last 3 bars, prior_4_days_avg for first 4
+  const prior = rolling.prior_4_days_avg ?? 0;
+  const recent = rolling.last_3_days_avg ?? 0;
+  const barColor = (pct: number) =>
+    pct >= 80 ? COLORS.primary : pct >= 40 ? COLORS.warning : COLORS.danger;
+
+  return [
+    { pct: prior, color: barColor(prior) },
+    { pct: prior, color: barColor(prior) },
+    { pct: prior, color: barColor(prior) },
+    { pct: prior, color: barColor(prior) },
+    { pct: recent, color: barColor(recent) },
+    { pct: recent, color: barColor(recent) },
+    { pct: recent, color: barColor(recent) },
+  ];
+}
+
 export default function AdherenceDashboard() {
-  const [members, setMembers] = useState<any[]>([]);
-  const [selected, setSelected] = useState<any | null>(null);
-  const [report, setReport] = useState<AdherenceReport | null>(null);
+  const route = useRoute<Route>();
+  const { memberId, memberName } = route.params;
+
+  const [report, setReport] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const loadMembers = useCallback(async () => {
-    try {
-      const res = await membersAPI.list();
-      const list = res.data.items ?? res.data;
-      setMembers(list);
-      if (list.length > 0 && !selected) setSelected(list[0]);
-    } catch {
-      Alert.alert('Error', 'Could not load members.');
-    }
-  }, [selected]);
-
-  const loadReport = useCallback(async (memberId: string) => {
-    setReport(null);
+  const fetchReport = useCallback(async () => {
     try {
       const res = await adherenceAPI.getReport(memberId);
       setReport(res.data);
     } catch {
-      Alert.alert('Error', 'Could not load adherence report.');
+      // show empty state
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
-  }, []);
+  }, [memberId]);
 
-  const refresh = useCallback(async () => {
-    setRefreshing(true);
-    await loadMembers();
-    if (selected) await loadReport(selected.id);
-    setRefreshing(false);
-  }, [loadMembers, loadReport, selected]);
+  useEffect(() => { fetchReport(); }, [fetchReport]);
 
-  useEffect(() => {
-    loadMembers().finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    if (selected) loadReport(selected.id);
-  }, [selected, loadReport]);
-
-  if (loading) return <LoadingOverlay message="Loading dashboard…" />;
+  if (loading) return <LoadingOverlay visible message="Loading dashboard…" />;
 
   const score = report?.overall_score ?? 0;
-  const scoreColor =
-    score >= 80 ? '#10B981' : score >= 60 ? '#F59E0B' : '#EF4444';
+  const sColor = scoreColor(score);
+  const sLabel = scoreLabel(score);
+  const rolling = report?.rolling_adherence;
+  const nutrition = report?.nutrition ?? {};
+  const strength = report?.strength ?? {};
+  const clinical = report?.clinical ?? {};
+
+  // Week number from program (approximate from day_number)
+  const weekNum = Math.ceil((report?.day_number ?? 1) / 7);
 
   return (
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor="#10B981" />
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={() => { setRefreshing(true); fetchReport(); }}
+          tintColor={COLORS.primary}
+        />
       }
     >
-      {/* Member selector */}
-      <Text style={styles.sectionLabel}>Family Member</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.memberScroll}>
-        {members.map((m) => (
-          <TouchableOpacity
-            key={m.id}
-            style={[styles.memberChip, selected?.id === m.id && styles.memberChipActive]}
-            onPress={() => setSelected(m)}
-          >
-            <Text style={[styles.memberChipText, selected?.id === m.id && styles.memberChipTextActive]}>
-              {m.full_name.split(' ')[0]}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.memberName}>{memberName}</Text>
+        {weekNum > 0 && (
+          <Text style={styles.weekSub}>Week {weekNum} of 13</Text>
+        )}
+      </View>
 
-      {!report ? (
-        <View style={styles.empty}>
-          <Text style={styles.emptyText}>Loading adherence data…</Text>
+      {/* Overall score card */}
+      <View style={styles.scoreCard}>
+        <Text style={styles.scoreBig} style={{ color: sColor } as any}>
+          {Math.round(score)}%
+        </Text>
+        <View style={[styles.labelBadge, { backgroundColor: sLabel.bg }]}>
+          <Text style={[styles.labelBadgeText, { color: sLabel.color }]}>
+            {sLabel.text}
+          </Text>
         </View>
-      ) : (
-        <>
-          {/* Overall score */}
-          <View style={[styles.card, styles.scoreCard]}>
-            <Text style={styles.scoreLabel}>Overall Adherence</Text>
-            <Text style={[styles.scoreValue, { color: scoreColor }]}>
-              {Math.round(score)}%
-            </Text>
-            <ProgressBar value={score} color={scoreColor} showPercent={false} />
-            {report.rolling && (
-              <View style={styles.trendRow}>
-                <Text style={styles.trendIcon}>
-                  {TREND_ICON[report.rolling.trend] ?? '➡️'}
-                </Text>
-                <Text style={styles.trendText}>
-                  7-day trend:{' '}
-                  <Text style={{ fontWeight: '700', textTransform: 'capitalize' }}>
-                    {report.rolling.trend}
-                  </Text>
-                  {' '}({Math.round(report.rolling.current_avg)}% vs {Math.round(report.rolling.previous_avg)}%)
-                </Text>
-              </View>
-            )}
-          </View>
+        {rolling && (
+          <Text style={[styles.trendText, { color: trendColor(rolling.trend) }]}>
+            {trendIcon(rolling.trend)}
+          </Text>
+        )}
+        <Text style={styles.weightNote}>
+          Nutrition 40% · Strength 40% · Clinical 20%
+        </Text>
+      </View>
 
-          {/* Component cards */}
+      {/* Nutrition card */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>🥗 Nutrition</Text>
+        <View style={styles.dataRow}>
+          <Text style={styles.dataLabel}>Calories</Text>
+          <Text style={styles.dataValue}>
+            {nutrition.actual_calories ?? '--'} / {nutrition.target_calories ?? '--'} kcal
+          </Text>
+        </View>
+        <ProgressBar
+          value={nutrition.adherence_rate ?? 0}
+          color={COLORS.primary}
+          showLabel={false}
+        />
+        <View style={styles.dataRow} style={{ marginTop: 12 } as any}>
+          <Text style={styles.dataLabel}>Protein</Text>
+          <Text style={styles.dataValue}>
+            {nutrition.actual_protein_g ?? '--'} / {nutrition.target_protein_g ?? '--'} g
+          </Text>
+        </View>
+        <ProgressBar
+          value={
+            nutrition.target_protein_g
+              ? Math.min(100, ((nutrition.actual_protein_g ?? 0) / nutrition.target_protein_g) * 100)
+              : 0
+          }
+          color={COLORS.primary}
+          showLabel={false}
+        />
+        {rolling && (
+          <Text style={[styles.trendSmall, { color: trendColor(rolling.trend) }]}>
+            {trendIcon(rolling.trend)}
+          </Text>
+        )}
+      </View>
+
+      {/* Strength card */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>💪 Strength</Text>
+        <View style={styles.dataRow}>
+          <Text style={styles.dataLabel}>Sessions this week</Text>
+          <Text style={styles.dataValue}>
+            {strength.sessions_completed ?? '--'} / {strength.sessions_target ?? '--'}
+          </Text>
+        </View>
+        <ProgressBar
+          value={strength.adherence_rate ?? 0}
+          color="#3B82F6"
+          showLabel={false}
+        />
+        <Text style={styles.barChartLabel}>7-Day Trend</Text>
+        <BarChart bars={buildBars(rolling)} />
+        <View style={styles.barLegend}>
           {[
-            {
-              key: 'nutrition',
-              label: 'Nutrition',
-              icon: '🥗',
-              color: '#10B981',
-              score: report.nutrition?.score ?? 0,
-              detail: `${report.nutrition?.meals_logged ?? 0} / ${report.nutrition?.target ?? 0} meals`,
-            },
-            {
-              key: 'strength',
-              label: 'Strength Training',
-              icon: '💪',
-              color: '#3B82F6',
-              score: report.strength?.score ?? 0,
-              detail: `${report.strength?.sessions_completed ?? 0} / ${report.strength?.target ?? 0} sessions`,
-            },
-            {
-              key: 'clinical',
-              label: 'Clinical Monitoring',
-              icon: '🩺',
-              color: '#8B5CF6',
-              score: report.clinical?.score ?? 0,
-              detail: `${report.clinical?.measurements_taken ?? 0} / ${report.clinical?.target ?? 0} measurements`,
-            },
-          ].map(({ key, label, icon, color, score: s, detail }) => (
-            <View key={key} style={styles.card}>
-              <View style={styles.compHeader}>
-                <Text style={styles.compIcon}>{icon}</Text>
-                <Text style={styles.compLabel}>{label}</Text>
-                <Text style={[styles.compScore, { color }]}>{Math.round(s)}%</Text>
-              </View>
-              <ProgressBar value={s} color={color} showPercent={false} />
-              <Text style={styles.compDetail}>{detail}</Text>
+            { color: COLORS.primary, label: 'Met' },
+            { color: COLORS.warning, label: 'Partial' },
+            { color: COLORS.danger, label: 'Missed' },
+          ].map(({ color, label }) => (
+            <View key={label} style={styles.legendItem}>
+              <View style={[styles.legendDot, { backgroundColor: color }]} />
+              <Text style={styles.legendText}>{label}</Text>
             </View>
           ))}
+        </View>
+      </View>
 
-          {/* Weight note */}
-          <View style={styles.weightNote}>
-            <Text style={styles.weightNoteText}>
-              Score weights: Nutrition 40% · Strength 40% · Clinical 20%
+      {/* Clinical card */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>🏥 Clinical</Text>
+        <View style={styles.dataRow}>
+          <Text style={styles.dataLabel}>Measurements this week</Text>
+          <Text style={styles.dataValue}>
+            {clinical.measurements_taken ?? '--'} / {clinical.measurements_target ?? '--'}
+          </Text>
+        </View>
+        <ProgressBar
+          value={clinical.adherence_rate ?? 0}
+          color="#8B5CF6"
+          showLabel={false}
+        />
+        <View style={styles.clinicalStats}>
+          <View style={styles.clinicalStat}>
+            <Text style={styles.clinicalStatLabel}>Latest BP</Text>
+            <Text style={styles.clinicalStatValue}>
+              {clinical.latest_bp ?? '--'}
             </Text>
           </View>
-        </>
-      )}
+          <View style={styles.clinicalDivider} />
+          <View style={styles.clinicalStat}>
+            <Text style={styles.clinicalStatLabel}>Weight</Text>
+            <Text style={styles.clinicalStatValue}>
+              {clinical.latest_weight_kg != null
+                ? `${clinical.latest_weight_kg} kg`
+                : '--'}
+            </Text>
+          </View>
+        </View>
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  container: { flex: 1, backgroundColor: COLORS.background },
   content: { padding: 16, paddingBottom: 40 },
-  sectionLabel: { fontSize: 13, fontWeight: '700', color: '#374151', marginBottom: 8 },
-  memberScroll: { marginBottom: 16 },
-  memberChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1.5,
-    borderColor: '#D1D5DB',
-    backgroundColor: '#FFFFFF',
-    marginRight: 8,
-  },
-  memberChipActive: { borderColor: '#10B981', backgroundColor: '#ECFDF5' },
-  memberChipText: { fontSize: 13, color: '#6B7280', fontWeight: '600' },
-  memberChipTextActive: { color: '#10B981' },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
+  header: { marginBottom: 16 },
+  memberName: { fontSize: 22, fontWeight: '800', color: COLORS.text },
+  weekSub: { fontSize: 13, color: COLORS.textSecondary, marginTop: 2 },
+  scoreCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
     marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
+    shadowOpacity: 0.07,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  scoreBig: { fontSize: 64, fontWeight: '900', lineHeight: 72 },
+  labelBadge: {
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  labelBadgeText: { fontSize: 14, fontWeight: '700' },
+  trendText: { fontSize: 14, fontWeight: '700', marginBottom: 8 },
+  weightNote: { fontSize: 11, color: COLORS.textSecondary, textAlign: 'center' },
+  card: {
+    backgroundColor: COLORS.white,
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
     elevation: 2,
   },
-  scoreCard: { alignItems: 'center' },
-  scoreLabel: { fontSize: 14, color: '#6B7280', fontWeight: '600', marginBottom: 6 },
-  scoreValue: { fontSize: 48, fontWeight: '900', marginBottom: 8 },
-  trendRow: { flexDirection: 'row', alignItems: 'center', marginTop: 10, gap: 6 },
-  trendIcon: { fontSize: 18 },
-  trendText: { fontSize: 13, color: '#4B5563' },
-  compHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  compIcon: { fontSize: 20, marginRight: 8 },
-  compLabel: { flex: 1, fontSize: 14, fontWeight: '700', color: '#374151' },
-  compScore: { fontSize: 16, fontWeight: '800' },
-  compDetail: { fontSize: 12, color: '#9CA3AF', marginTop: 6 },
-  weightNote: {
-    backgroundColor: '#F3F4F6',
-    borderRadius: 8,
-    padding: 12,
+  cardTitle: { fontSize: 16, fontWeight: '800', color: COLORS.text, marginBottom: 14 },
+  dataRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 6,
   },
-  weightNoteText: { fontSize: 11, color: '#6B7280' },
-  empty: { alignItems: 'center', marginTop: 40 },
-  emptyText: { fontSize: 14, color: '#9CA3AF' },
+  dataLabel: { fontSize: 13, color: COLORS.textSecondary, fontWeight: '500' },
+  dataValue: { fontSize: 13, color: COLORS.text, fontWeight: '700' },
+  trendSmall: { fontSize: 12, fontWeight: '700', marginTop: 10 },
+  barChartLabel: { fontSize: 12, color: COLORS.textSecondary, marginTop: 14, fontWeight: '600' },
+  barLegend: { flexDirection: 'row', gap: 16, marginTop: 8 },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  legendDot: { width: 8, height: 8, borderRadius: 4 },
+  legendText: { fontSize: 11, color: COLORS.textSecondary },
+  clinicalStats: {
+    flexDirection: 'row',
+    marginTop: 14,
+    backgroundColor: COLORS.background,
+    borderRadius: 10,
+    padding: 14,
+  },
+  clinicalStat: { flex: 1, alignItems: 'center' },
+  clinicalStatLabel: { fontSize: 12, color: COLORS.textSecondary, marginBottom: 4 },
+  clinicalStatValue: { fontSize: 18, fontWeight: '800', color: COLORS.text },
+  clinicalDivider: { width: 1, backgroundColor: COLORS.border, marginVertical: 4 },
 });
