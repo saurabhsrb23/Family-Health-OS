@@ -353,6 +353,39 @@ def get_rolling_adherence(member_id: UUID, component_type: str, db: Session) -> 
 
 # ── Full adherence report ─────────────────────────────────────────────────────
 
+def _latest_clinical_readings(member_id: UUID, db: Session) -> dict:
+    """Return latest BP string and latest weight_kg for the dashboard snapshot."""
+    latest_bp = (
+        db.query(HealthMeasurement)
+        .filter(
+            HealthMeasurement.member_id == member_id,
+            HealthMeasurement.measurement_type == "blood_pressure",
+            HealthMeasurement.deleted_at.is_(None),
+        )
+        .order_by(HealthMeasurement.measured_at.desc())
+        .first()
+    )
+    latest_weight = (
+        db.query(HealthMeasurement)
+        .filter(
+            HealthMeasurement.member_id == member_id,
+            HealthMeasurement.measurement_type == "weight",
+            HealthMeasurement.deleted_at.is_(None),
+        )
+        .order_by(HealthMeasurement.measured_at.desc())
+        .first()
+    )
+    bp_str = (
+        f"{latest_bp.systolic_bp}/{latest_bp.diastolic_bp} mmHg"
+        if latest_bp and latest_bp.systolic_bp and latest_bp.diastolic_bp
+        else None
+    )
+    return {
+        "latest_bp": bp_str,
+        "latest_weight_kg": latest_weight.weight_kg if latest_weight else None,
+    }
+
+
 def get_full_adherence_report(member_id: UUID, db: Session) -> dict:
     """
     Full adherence dashboard report.
@@ -401,6 +434,7 @@ def get_full_adherence_report(member_id: UUID, db: Session) -> dict:
             "measurements_this_week": clinical_week["actual_value"],
             "target_measurements": clinical_week["target_value"],
             "week_adherence_pct": clinical_pct,
+            **_latest_clinical_readings(member_id, db),
         },
         "overall_pct": overall_pct,
     }

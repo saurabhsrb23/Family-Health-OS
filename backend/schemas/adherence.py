@@ -40,6 +40,8 @@ class ClinicalAdherence(BaseModel):
     measurements_this_week: int
     target_measurements: int
     week_adherence_pct: float
+    latest_bp: Optional[str] = None
+    latest_weight_kg: Optional[float] = None
 
 
 class FullAdherenceReport(BaseModel):
