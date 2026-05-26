@@ -47,6 +47,8 @@ class ClinicalAdherence(BaseModel):
 class FullAdherenceReport(BaseModel):
     member_id: UUID
     report_date: date
+    week_start: Optional[date] = None
+    week_end: Optional[date] = None
     nutrition: NutritionAdherence
     strength: StrengthAdherence
     clinical: ClinicalAdherence

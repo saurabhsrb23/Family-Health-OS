@@ -111,6 +111,21 @@ function buildBars(rolling: any): { pct: number; color: string }[] {
   return Array(7).fill(fallback(avg));
 }
 
+function addDays(dateStr: string, days: number): string {
+  const d = new Date(dateStr);
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split('T')[0];
+}
+
+function formatWeekLabel(weekStart?: string, weekEnd?: string): string {
+  if (!weekStart || !weekEnd) return '';
+  const fmt = (s: string) => {
+    const d = new Date(s);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+  return `${fmt(weekStart)} – ${fmt(weekEnd)}`;
+}
+
 export default function AdherenceDashboard() {
   const route = useRoute<Route>();
   const { memberId, memberName } = route.params;
@@ -119,11 +134,19 @@ export default function AdherenceDashboard() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
+  // weekOffset: 0 = this week, -7 = last week, -14 = 2 weeks ago, etc.
+  const [weekOffset, setWeekOffset] = useState(0);
 
-  const fetchReport = useCallback(async () => {
+  const fetchReport = useCallback(async (offset: number) => {
     setError('');
     try {
-      const res = await adherenceAPI.getReport(memberId);
+      let reportDate: string | undefined;
+      if (offset !== 0) {
+        const d = new Date();
+        d.setDate(d.getDate() + offset);
+        reportDate = d.toISOString().split('T')[0];
+      }
+      const res = await adherenceAPI.getReport(memberId, reportDate);
       setReport(res.data);
     } catch (err: any) {
       setError(err?.response?.data?.detail ?? 'Could not load dashboard.');
@@ -134,11 +157,19 @@ export default function AdherenceDashboard() {
   }, [memberId]);
 
   // useFocusEffect re-fetches every time the screen comes into focus
-  // (covers navigate from NutritionResult even if screen is already mounted)
   useFocusEffect(useCallback(() => {
     setLoading(true);
-    fetchReport();
-  }, [fetchReport]));
+    fetchReport(weekOffset);
+  }, [fetchReport, weekOffset]));
+
+  const goToPrevWeek = () => {
+    setWeekOffset((prev) => prev - 7);
+    setLoading(true);
+  };
+  const goToNextWeek = () => {
+    setWeekOffset((prev) => prev + 7);
+    setLoading(true);
+  };
 
   if (loading) return <LoadingOverlay visible message="Loading dashboard…" />;
 
@@ -162,9 +193,8 @@ export default function AdherenceDashboard() {
   const nutrition = report?.nutrition ?? {};
   const strength = report?.strength ?? {};
   const clinical = report?.clinical ?? {};
-
-  // Week number from program (approximate from day_number)
-  const weekNum = Math.ceil((report?.day_number ?? 1) / 7);
+  const isCurrentWeek = weekOffset === 0;
+  const weekLabel = formatWeekLabel(report?.week_start, report?.week_end);
 
   return (
     <ScrollView
@@ -173,7 +203,7 @@ export default function AdherenceDashboard() {
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
-          onRefresh={() => { setRefreshing(true); fetchReport(); }}
+          onRefresh={() => { setRefreshing(true); fetchReport(weekOffset); }}
           tintColor={COLORS.primary}
         />
       }
@@ -181,9 +211,24 @@ export default function AdherenceDashboard() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.memberName}>{memberName}</Text>
-        {weekNum > 0 && (
-          <Text style={styles.weekSub}>Week {weekNum} of 13</Text>
-        )}
+        {weekLabel ? <Text style={styles.weekSub}>{weekLabel}</Text> : null}
+      </View>
+
+      {/* Week navigation */}
+      <View style={styles.weekNav}>
+        <TouchableOpacity style={styles.weekNavBtn} onPress={goToPrevWeek}>
+          <Text style={styles.weekNavText}>← Previous</Text>
+        </TouchableOpacity>
+        <Text style={styles.weekNavCurrent}>
+          {isCurrentWeek ? 'This Week' : `${Math.abs(weekOffset / 7)} week${Math.abs(weekOffset) > 7 ? 's' : ''} ago`}
+        </Text>
+        <TouchableOpacity
+          style={[styles.weekNavBtn, isCurrentWeek && styles.weekNavBtnDisabled]}
+          onPress={goToNextWeek}
+          disabled={isCurrentWeek}
+        >
+          <Text style={[styles.weekNavText, isCurrentWeek && styles.weekNavTextDisabled]}>Next →</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Overall score card */}
@@ -311,9 +356,30 @@ export default function AdherenceDashboard() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   content: { padding: 16, paddingBottom: 40 },
-  header: { marginBottom: 16 },
+  header: { marginBottom: 8 },
   memberName: { fontSize: 22, fontWeight: '800', color: COLORS.text },
   weekSub: { fontSize: 13, color: COLORS.textSecondary, marginTop: 2 },
+  weekNav: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 12,
+    ...cardShadow('sm'),
+  },
+  weekNavBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: COLORS.primaryLight,
+  },
+  weekNavBtnDisabled: { backgroundColor: COLORS.border },
+  weekNavText: { fontSize: 13, fontWeight: '700', color: COLORS.primaryDark },
+  weekNavTextDisabled: { color: COLORS.textSecondary },
+  weekNavCurrent: { fontSize: 13, fontWeight: '700', color: COLORS.text },
   scoreCard: {
     backgroundColor: COLORS.white,
     borderRadius: 16,

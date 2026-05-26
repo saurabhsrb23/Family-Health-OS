@@ -83,8 +83,10 @@ export const mealsAPI = {
 };
 
 export const adherenceAPI = {
-  getReport: (memberId: string) =>
-    api.get(`/members/${memberId}/adherence`),
+  getReport: (memberId: string, reportDate?: string) =>
+    api.get(`/members/${memberId}/adherence`, {
+      params: reportDate ? { report_date: reportDate } : undefined,
+    }),
   getDailyNutrition: (memberId: string) =>
     api.get(`/members/${memberId}/adherence/nutrition/daily`),
 };

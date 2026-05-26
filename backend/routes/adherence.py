@@ -3,6 +3,7 @@ from datetime import date
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
+from typing import Optional
 from sqlalchemy.orm import Session
 
 from database import get_db
@@ -21,6 +22,7 @@ logger = logging.getLogger(__name__)
 @router.get("/members/{member_id}/adherence", response_model=FullAdherenceReport)
 def get_adherence_report(
     member_id: UUID,
+    report_date: Optional[date] = Query(default=None, description="Reference date for the report week (defaults to today). Pass any date in a past week to view historical data."),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -28,16 +30,17 @@ def get_adherence_report(
     Full adherence dashboard for a family member.
 
     Returns:
-    - Today's nutrition adherence (protein + calories vs targets)
-    - This week's strength adherence (sessions completed vs target)
-    - This week's clinical adherence (measurements vs target)
+    - Today's (or report_date's) nutrition adherence (protein + calories vs targets)
+    - The week's strength adherence (sessions completed vs target)
+    - The week's clinical adherence (measurements vs target)
     - 7-day rolling adherence with trend for nutrition + strength
     - Overall weighted score: nutrition 40% + strength 40% + clinical 20%
 
     Partially cached (TTL=15min per component). Recalculates on cache miss.
+    Pass report_date to view a previous week's data.
     """
     get_member_by_id(member_id, current_user.id, db)
-    report = adherence_service.get_full_adherence_report(member_id, db)
+    report = adherence_service.get_full_adherence_report(member_id, db, report_date=report_date)
     return FullAdherenceReport(**report)
 
 

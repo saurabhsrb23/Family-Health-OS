@@ -386,13 +386,15 @@ def _latest_clinical_readings(member_id: UUID, db: Session) -> dict:
     }
 
 
-def get_full_adherence_report(member_id: UUID, db: Session) -> dict:
+def get_full_adherence_report(member_id: UUID, db: Session, report_date: date | None = None) -> dict:
     """
     Full adherence dashboard report.
     Computes today's nutrition + current week's strength/clinical + 7-day rolling for all.
     Weighted overall: nutrition 40%, strength 40%, clinical 20%.
+
+    Pass report_date to view a historical week (e.g. last week's data).
     """
-    today = date.today()
+    today = report_date or date.today()
     # Week starts on Monday
     week_start = today - timedelta(days=today.weekday())
 
@@ -412,9 +414,12 @@ def get_full_adherence_report(member_id: UUID, db: Session) -> dict:
     clinical_pct = clinical_week["adherence_percentage"]
     overall_pct = round(nutrition_pct * 0.4 + strength_pct * 0.4 + clinical_pct * 0.2, 1)
 
+    week_end = week_start + timedelta(days=6)
     return {
         "member_id": str(member_id),
         "report_date": str(today),
+        "week_start": str(week_start),
+        "week_end": str(week_end),
         "nutrition": {
             "today_calories_target": nutrition_config.get("daily_calorie_target"),
             "today_calories_actual": nutrition_today.get("actual_calories"),
