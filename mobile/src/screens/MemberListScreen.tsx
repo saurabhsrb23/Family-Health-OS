@@ -55,11 +55,28 @@ export default function MemberListScreen() {
     // Set logout button in header
     navigation.setOptions({
       headerRight: () => (
-        <TouchableOpacity onPress={logout} style={{ marginRight: 16 }}>
-          <Text style={{ color: COLORS.white, fontWeight: '600', fontSize: 14 }}>
-            Sign Out
-          </Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 12, gap: 10 }}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('AddMember')}
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 16,
+              backgroundColor: 'rgba(255,255,255,0.25)',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Text style={{ color: COLORS.white, fontSize: 20, fontWeight: '700', includeFontPadding: false, textAlignVertical: 'center' }}>
+              +
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={logout}>
+            <Text style={{ color: COLORS.white, fontWeight: '600', fontSize: 14 }}>
+              Sign Out
+            </Text>
+          </TouchableOpacity>
+        </View>
       ),
     });
     fetchMembers();

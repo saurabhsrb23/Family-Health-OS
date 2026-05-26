@@ -12,6 +12,10 @@ import NutritionResultScreen from '../screens/NutritionResultScreen';
 import AdherenceDashboard from '../screens/AdherenceDashboard';
 import WorkoutLogScreen from '../screens/WorkoutLogScreen';
 import ClinicalLogScreen from '../screens/ClinicalLogScreen';
+import AddMemberScreen from '../screens/AddMemberScreen';
+import CreateProgramScreen from '../screens/CreateProgramScreen';
+import ConfigureComponentsScreen from '../screens/ConfigureComponentsScreen';
+import EnrollmentSuccessScreen from '../screens/EnrollmentSuccessScreen';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -22,6 +26,18 @@ export type RootStackParamList = {
   AdherenceDashboard: { memberId: string; memberName: string };
   WorkoutLog: { memberId: string; memberName: string; programId: string };
   ClinicalLog: { memberId: string; memberName: string; programId: string };
+  AddMember: undefined;
+  CreateProgram: { memberId: string; memberName: string };
+  ConfigureComponents: {
+    memberId: string;
+    memberName: string;
+    programTitle: string;
+    startDate: string;
+  };
+  EnrollmentSuccess: {
+    memberName: string;
+    programTitle: string;
+  };
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -88,6 +104,26 @@ export default function AppNavigator() {
               name="ClinicalLog"
               component={ClinicalLogScreen}
               options={{ title: 'Log Measurement' }}
+            />
+            <Stack.Screen
+              name="AddMember"
+              component={AddMemberScreen}
+              options={{ title: 'Add Family Member' }}
+            />
+            <Stack.Screen
+              name="CreateProgram"
+              component={CreateProgramScreen}
+              options={{ title: 'Create Program' }}
+            />
+            <Stack.Screen
+              name="ConfigureComponents"
+              component={ConfigureComponentsScreen}
+              options={{ title: 'Configure Program' }}
+            />
+            <Stack.Screen
+              name="EnrollmentSuccess"
+              component={EnrollmentSuccessScreen}
+              options={{ title: 'Enrolled!', headerLeft: () => null }}
             />
           </>
         )}

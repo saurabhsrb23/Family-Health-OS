@@ -66,6 +66,8 @@ export const programsAPI = {
   list: (memberId: string) => api.get(`/members/${memberId}/programs`),
   get: (memberId: string, programId: string) =>
     api.get(`/members/${memberId}/programs/${programId}`),
+  create: (memberId: string, data: any) =>
+    api.post(`/members/${memberId}/programs`, data),
 };
 
 export const mealsAPI = {
