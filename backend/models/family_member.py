@@ -3,7 +3,7 @@ from datetime import datetime
 
 from sqlalchemy import Boolean, Column, Date, DateTime, String
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship as orm_relationship
 from sqlalchemy import ForeignKey
 
 from database import Base
@@ -25,9 +25,9 @@ class FamilyMember(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     deleted_at = Column(DateTime, nullable=True)
 
-    # Relationships
-    user = relationship("User", back_populates="family_members")
-    care_programs = relationship(
+    # Relationships — use orm_relationship alias to avoid conflict with the 'relationship' column above
+    user = orm_relationship("User", back_populates="family_members")
+    care_programs = orm_relationship(
         "CareProgram",
         back_populates="member",
         primaryjoin="and_(FamilyMember.id == CareProgram.member_id, CareProgram.deleted_at == None)",
