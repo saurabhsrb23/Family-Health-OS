@@ -1,6 +1,6 @@
 # Family Health OS
 
-> **Founding Full-Stack Engineer Take-Home** — 90-day family care platform with AI-powered nutrition tracking, strength training, and clinical monitoring.
+> A full-stack family health platform delivering 90-day personalized programs for nutrition tracking, strength training, and clinical monitoring — built with AI at its core.
 
 **Stack:** Python + FastAPI + PostgreSQL + Redis · React Native + Expo · Docker · GCP (architecture documented)
 
