@@ -1,4 +1,4 @@
-# Praan Health — Family Health OS
+# Family Health OS
 
 A 90-day family care platform with nutrition tracking, strength training, and clinical monitoring.
 
@@ -10,8 +10,8 @@ A 90-day family care platform with nutrition tracking, strength training, and cl
 
 ```bash
 # Clone the repo
-git clone <repo-url>
-cd praan-health
+git clone https://github.com/saurabhsrb23/Family-Health-OS.git
+cd Family-Health-OS
 
 # Build and start all services
 docker-compose up --build
@@ -35,7 +35,7 @@ On first boot, Docker will automatically:
 ## Demo Credentials
 | Field | Value |
 |---|---|
-| Email | demo@praan.health |
+| Email | demo@familyhealthos.com |
 | Password | Demo@1234 |
 
 ---
@@ -73,7 +73,7 @@ docker-compose ps
 ## Project Structure
 
 ```
-praan-health/
+Family-Health-OS/
 ├── docker-compose.yml       # Full stack: backend + PostgreSQL + Redis
 ├── backend/
 │   ├── Dockerfile           # Backend container

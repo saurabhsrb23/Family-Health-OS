@@ -1,6 +1,6 @@
-# Praan Health — Backend
+# Family Health OS — Backend
 
-FastAPI + PostgreSQL + Redis backend for the Family Health OS.
+FastAPI + PostgreSQL + Redis backend for Family Health OS.
 
 ## Setup
 
@@ -24,7 +24,7 @@ API docs: http://localhost:8000/docs
 
 | Variable | Description | Default |
 |---|---|---|
-| `DATABASE_URL` | PostgreSQL connection string | localhost praan_health DB |
+| `DATABASE_URL` | PostgreSQL connection string | localhost family_health_os DB |
 | `REDIS_URL` | Redis connection string | localhost:6379 |
 | `JWT_SECRET_KEY` | Secret for signing JWTs | **change this** |
 | `JWT_ALGORITHM` | JWT algorithm | HS256 |

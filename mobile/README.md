@@ -1,4 +1,4 @@
-# Praan Health — Mobile App
+# Family Health OS — Mobile App
 
 React Native + Expo app for Family Health OS.
 

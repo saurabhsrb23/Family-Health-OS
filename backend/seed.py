@@ -3,7 +3,7 @@ Seed script — populates demo data on first run.
 Idempotent: safe to run multiple times (skips if data already exists).
 
 Demo credentials:
-  Email:    demo@praan.health
+  Email:    demo@familyhealthos.com
   Password: Demo@1234
 """
 

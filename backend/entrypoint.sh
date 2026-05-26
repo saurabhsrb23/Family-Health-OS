@@ -2,7 +2,7 @@
 set -e
 
 echo "========================================="
-echo " Praan Health API — Starting Up"
+echo " Family Health OS API — Starting Up"
 echo "========================================="
 
 # ── Wait for PostgreSQL ───────────────────────────────────────────────────────
@@ -45,6 +45,6 @@ python seed.py
 echo "  Seed complete."
 
 echo "========================================="
-echo " Starting Uvicorn on port 8000"
+echo " Family Health OS — Starting Uvicorn on port 8000"
 echo "========================================="
 exec uvicorn main:app --host 0.0.0.0 --port 8000 --reload

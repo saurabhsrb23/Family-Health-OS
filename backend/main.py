@@ -24,9 +24,9 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Praan Health API",
+    title="Family Health OS API",
     version="1.0.0",
-    description="Family Health OS API",
+    description="Family Health OS — 90-day family care platform",
     docs_url="/docs",
     redoc_url="/redoc",
     lifespan=lifespan,
