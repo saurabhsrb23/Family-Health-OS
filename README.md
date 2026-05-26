@@ -20,8 +20,8 @@ docker-compose up --build
 On first boot, Docker will automatically:
 1. Start PostgreSQL + Redis
 2. Wait for both to be healthy
-3. Run Alembic database migrations
-4. Populate demo seed data
+3. Run Alembic database migrations (creates all 10 tables)
+4. Populate demo seed data (1 user, 2 members, 1 program, sample logs)
 5. Start the FastAPI server on port 8000
 
 **That's it.** Open:
@@ -37,6 +37,18 @@ On first boot, Docker will automatically:
 |---|---|
 | Email | demo@familyhealthos.com |
 | Password | Demo@1234 |
+
+---
+
+## Seed Data Included
+- **1 demo user** — demo@familyhealthos.com
+- **2 family members** — Alex Johnson (self) + Sarah Johnson (spouse)
+- **1 active 90-day care program** — started 10 days ago
+- **3 program components** — nutrition (60g protein/day), strength (4x/week), clinical (BP + weight)
+- **7 days of meal logs** — breakfast, lunch, dinner with extracted nutrition data
+- **3 workout sessions** — strength training with exercise logs
+- **7 days of health measurements** — blood pressure + weight
+- **7 days of adherence metrics** — nutrition component tracking
 
 ---
 
@@ -70,6 +82,24 @@ docker-compose ps
 
 ---
 
+## Database Schema
+
+| Table | Description |
+|---|---|
+| `users` | Account credentials and profile |
+| `family_members` | Members linked to a user account |
+| `care_programs` | 90-day programs per family member |
+| `program_components` | Nutrition / Strength / Clinical config per program |
+| `meal_logs` | Meal photo uploads + AI-extracted nutrition data |
+| `workout_sessions` | Workout sessions with energy level and duration |
+| `exercise_logs` | Individual exercises per session (sets/reps/weight) |
+| `health_measurements` | BP, weight, glucose readings |
+| `adherence_metrics` | Daily adherence scores per component (unique per member/component/day) |
+| `program_summaries` | AI-generated weekly summaries (unique per program/week) |
+| `audit_logs` | Append-only PHI access log (no soft delete) |
+
+---
+
 ## Project Structure
 
 ```
@@ -83,7 +113,7 @@ Family-Health-OS/
 │   ├── database.py          # SQLAlchemy engine + session + Base
 │   ├── seed.py              # Demo data population (idempotent)
 │   ├── alembic.ini          # Alembic config
-│   ├── models/              # SQLAlchemy ORM models
+│   ├── models/              # SQLAlchemy ORM models (10 models)
 │   ├── schemas/             # Pydantic request/response schemas
 │   ├── routes/              # FastAPI route handlers
 │   ├── services/            # Business logic layer
@@ -145,7 +175,7 @@ All config is in `docker-compose.yml` for local dev. For manual setup, copy `bac
 ## Modules Built
 
 - [x] Module 1 — Project Foundation & Structure (Docker full-stack setup)
-- [ ] Module 2 — Database Models
+- [x] Module 2 — Database Models (10 SQLAlchemy models + seed data)
 - [ ] Module 3 — Auth (JWT + RBAC)
 - [ ] Module 4 — Member Management APIs
 - [ ] Module 5 — Care Program APIs
