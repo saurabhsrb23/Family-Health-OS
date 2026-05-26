@@ -1167,8 +1167,12 @@ Cloud Scheduler fires `POST /api/v1/members/*/summaries/generate` at 23:00 IST e
 ```
 ┌──────────────────────────────────┐
 │ ◄  Rahul Sharma                  │
-│    Week 5 of 13                  │
+│    May 19 – May 25               │  ◄── week date range
 ├──────────────────────────────────┤
+│ ┌──────────────────────────────┐ │
+│ │ ← Previous  This Week  Next →│ │  ◄── week navigation bar
+│ └──────────────────────────────┘ │
+│                                  │
 │ ┌──────────────────────────────┐ │
 │ │           82%                │ │  ◄── large score, green
 │ │       [ On Track ✓ ]         │ │
@@ -1200,9 +1204,96 @@ Cloud Scheduler fires `POST /api/v1/members/*/summaries/generate` at 23:00 IST e
 │ │ 🏥 Clinical                  │ │
 │ │ Measurements this week  5/5  │ │
 │ │ ████████████████████ 100%    │ │
-│ │  Latest BP  │  Weight        │ │
-│ │   118/76    │   --           │ │
+│ │  Latest BP   │  Weight       │ │
+│ │  128/82 mmHg │  71.5 kg     │ │  ◄── live readings from DB
 │ └──────────────────────────────┘ │
+└──────────────────────────────────┘
+```
+
+#### Screen 5 — Workout Log
+
+```
+┌──────────────────────────────────┐
+│ ◄  Log Workout                   │
+├──────────────────────────────────┤
+│ Session Type                     │
+│ ┌────┐ ┌────┐ ┌────┐ ┌────┐     │
+│ │ 💪 │ │ 🏃 │ │ 🧘 │ │ 🕉 │     │
+│ │Str │ │Car │ │Flx │ │Yog │     │
+│ └────┘ └────┘ └────┘ └────┘     │
+│  (active border on selected)     │
+│                                  │
+│ Energy Level                     │
+│  ⚡  ⚡  ⚡  ○  ○   Moderate     │
+│                                  │
+│ Duration (minutes)               │
+│ ┌──────────────────────────────┐ │
+│ │  45                          │ │
+│ └──────────────────────────────┘ │
+│                                  │
+│ Exercises              [+ Add]   │
+│ ┌──────────────────────────────┐ │
+│ │ Exercise 1          [Remove] │ │
+│ │ ┌────────────────────────┐   │ │
+│ │ │ Squats                 │   │ │
+│ │ └────────────────────────┘   │ │
+│ │  Sets    Reps   Weight(kg)   │ │
+│ │  [ 3 ]  [ 10 ]  [ 60  ]     │ │
+│ └──────────────────────────────┘ │
+│ ┌──────────────────────────────┐ │
+│ │ Exercise 2          [Remove] │ │
+│ │ ┌────────────────────────┐   │ │
+│ │ │ Bench Press            │   │ │
+│ │ └────────────────────────┘   │ │
+│ │  Sets    Reps   Weight(kg)   │ │
+│ │  [ 4 ]  [ 8 ]   [ 80  ]     │ │
+│ └──────────────────────────────┘ │
+│                                  │
+│ Notes (optional)                 │
+│ ┌──────────────────────────────┐ │
+│ │ Great session today...       │ │
+│ └──────────────────────────────┘ │
+│                                  │
+│  ┌────────────────────────────┐  │
+│  │     💪 Save Workout        │  │  ◄── blue, POST /workouts
+│  └────────────────────────────┘  │
+└──────────────────────────────────┘
+```
+
+#### Screen 6 — Clinical Log
+
+```
+┌──────────────────────────────────┐
+│ ◄  Log Measurement               │
+├──────────────────────────────────┤
+│ Measurement Type                 │
+│ ┌──────────┐ ┌────┐ ┌────────┐  │
+│ │    ❤️    │ │ ⚖️ │ │   🩸   │  │
+│ │  Blood   │ │Wght│ │Glucose │  │
+│ │ Pressure │ │    │ │        │  │
+│ └──────────┘ └────┘ └────────┘  │
+│  (active border on selected)     │
+│                                  │
+│ ┌──────────────────────────────┐ │
+│ │ ❤️ Blood Pressure (mmHg)     │ │
+│ │                              │ │
+│ │  Systolic    /   Diastolic   │ │
+│ │  ┌───────┐       ┌───────┐   │ │
+│ │  │  120  │   /   │  80   │   │ │
+│ │  └───────┘       └───────┘   │ │
+│ │   mmHg               mmHg    │ │
+│ │                              │ │
+│ │ Normal: 90/60 – 120/80 mmHg  │ │  ◄── reference range
+│ └──────────────────────────────┘ │
+│                                  │
+│ Notes (optional)                 │
+│ ┌──────────────────────────────┐ │
+│ │ After morning walk...        │ │
+│ └──────────────────────────────┘ │
+│                                  │
+│  ┌────────────────────────────┐  │
+│  │    🏥 Save Measurement     │  │  ◄── purple, POST /measurements
+│  └────────────────────────────┘  │
 └──────────────────────────────────┘
 ```
 
@@ -1220,9 +1311,17 @@ Cloud Scheduler fires `POST /api/v1/members/*/summaries/generate` at 23:00 IST e
 | FAB placement | Bottom-right on Program Overview | Most frequent action (log meal) always one tap away |
 | Polling vs WebSocket | Polling (2s interval, max 30 polls) | Simpler for prototype; WebSocket for production at scale |
 | Pull-to-refresh | All list screens | Standard mobile UX pattern; reduces need for auto-refresh |
+| Week navigation | Prev/Next buttons with date range label | Allows reviewing historical weeks without a calendar picker; disabled at current week |
+| Workout UX | Dynamic exercise list (add/remove) | Strength sessions are variable-length; fixed rows don't fit real gym use |
+| Clinical UX | Measurement type tabs + conditional fields | BP needs 2 fields, weight needs 1, glucose needs 1 — conditional rendering avoids clutter |
+| BP reference range | Inline "Normal: 90/60–120/80 mmHg" tip | First-time users often don't know normal ranges; reduces support queries |
+| Color coding | Blue for strength (#3B82F6), Purple for clinical (#8B5CF6) | Consistent with AdherenceDashboard component colors; builds visual language |
 
 ---
 
-*Document version: 1.0 — written at completion of Modules 1–10 (backend + mobile app)*
+*Document version: 1.3 — updated at completion of Modules 1–13*
+*Changes in v1.1: API field alignment, mobile bug fixes, dashboard wiring*
+*Changes in v1.2: WorkoutLogScreen + ClinicalLogScreen wireframes; latest BP/weight in adherence report*
+*Changes in v1.3: Historical week navigation (report_date param); 6 UI screens documented*
 *Author: Founding Full-Stack Engineer take-home assignment*
 *Stack: Python + FastAPI + PostgreSQL + Redis + React Native + GCP*

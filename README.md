@@ -263,11 +263,12 @@ All protected endpoints require: `Authorization: Bearer <access_token>`
 |---|---|---|
 | POST | `/members/{id}/measurements` | Log BP / weight / glucose |
 | GET | `/members/{id}/measurements` | List measurements |
+| GET | `/members/{id}/measurements/latest` | Latest reading of each type (BP, weight, glucose) |
 
 ### Adherence
 | Method | Endpoint | Description |
 |---|---|---|
-| GET | `/members/{id}/adherence` | Full adherence report (nutrition + strength + clinical + overall) |
+| GET | `/members/{id}/adherence` | Full adherence report — pass `?report_date=YYYY-MM-DD` for historical weeks |
 | GET | `/members/{id}/adherence/nutrition/daily` | Daily nutrition adherence |
 | POST | `/members/{id}/adherence/recompute` | Force recalculate adherence |
 
@@ -338,6 +339,8 @@ Family-Health-OS/
             ├── ProgramOverviewScreen.tsx
             ├── MealCaptureScreen.tsx
             ├── NutritionResultScreen.tsx
+            ├── WorkoutLogScreen.tsx
+            ├── ClinicalLogScreen.tsx
             └── AdherenceDashboard.tsx
 ```
 
@@ -398,9 +401,10 @@ Family-Health-OS/
 | **Module 7** | Adherence engine — nutrition (daily), strength (weekly), clinical (weekly), 7-day rolling trend, weighted overall score (nutrition 40% + strength 40% + clinical 20%) | ✅ |
 | **Module 8** | Weekly AI summaries — structured JSON output schema, mock Gemini integration, schema validation, rich seed data (135 meals, 23 workouts, 30 measurements) | ✅ |
 | **Module 9** | React Native mobile app — Expo SDK 54, navigation, AuthContext, all screens, camera integration | ✅ |
-| **Module 10** | Screen implementation — all 6 screens fully wired to backend API with real data | ✅ |
-| **Module 11** | DESIGN.md — 930-line system design document (architecture, DB decision, caching, API, security, scalability, wireframes) | ✅ |
+| **Module 10** | Screen implementation — all 6 core screens fully wired to backend API with real data | ✅ |
+| **Module 11** | DESIGN.md — system design document (architecture, DB decision, caching, API, security, scalability, wireframes) | ✅ |
 | **Module 12** | Final wiring — API field alignment, meal upload fix, dashboard fixes, mobile README | ✅ |
+| **Module 13** | Workout & Clinical logging — WorkoutLogScreen (exercises/sets/reps/weight), ClinicalLogScreen (BP/weight/glucose with validation), latest readings in dashboard, historical week navigation | ✅ |
 
 ---
 
