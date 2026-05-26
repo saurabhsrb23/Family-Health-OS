@@ -40,7 +40,7 @@ const MEAL_COLORS: Record<string, string> = {
 export default function NutritionResultScreen() {
   const route = useRoute<Route>();
   const navigation = useNavigation<Nav>();
-  const { memberId, mealId } = route.params;
+  const { memberId, mealId, memberName } = route.params;
 
   const [status, setStatus] = useState<string>('pending');
   const [meal, setMeal] = useState<any>(null);
@@ -62,7 +62,7 @@ export default function NutritionResultScreen() {
     const poll = async () => {
       try {
         const res = await mealsAPI.getStatus(memberId, mealId);
-        const s: string = res.data.status;
+        const s: string = res.data.extraction_status;
         setStatus(s);
         if (s === 'completed' || s === 'failed') {
           clearInterval(pollRef.current!);
@@ -117,17 +117,17 @@ export default function NutritionResultScreen() {
     );
   }
 
-  const ext = meal.extracted_nutrition ?? {};
-  const calories = ext.calories ?? 0;
-  const protein = ext.protein_g ?? 0;
-  const carbs = ext.carbohydrates_g ?? 0;
-  const fat = ext.fat_g ?? 0;
+  // Backend returns flat fields on MealLogResponse (not nested extracted_nutrition)
+  const calories = meal.calories ?? 0;
+  const protein = meal.protein_g ?? 0;
+  const carbs = meal.carbs_g ?? 0;
+  const fat = meal.fat_g ?? 0;
 
   const mealColor = MEAL_COLORS[meal.meal_type] ?? COLORS.primary;
 
-  // Adherence impact
-  const proteinTarget = adherence?.nutrition?.target_protein_g ?? 60;
-  const proteinLogged = adherence?.nutrition?.actual_protein_g ?? protein;
+  // Adherence impact — backend NutritionAdherence fields
+  const proteinTarget = adherence?.nutrition?.today_protein_target ?? 60;
+  const proteinLogged = adherence?.nutrition?.today_protein_actual ?? protein;
   const proteinPct = Math.min(100, (proteinLogged / proteinTarget) * 100);
 
   return (
@@ -141,10 +141,8 @@ export default function NutritionResultScreen() {
             {meal.meal_type?.toUpperCase() ?? 'MEAL'}
           </Text>
         </View>
-        {ext.foods_identified?.length > 0 && (
-          <Text style={styles.foodsText}>
-            {ext.foods_identified.slice(0, 4).join(', ')}
-          </Text>
+        {!!meal.food_description && (
+          <Text style={styles.foodsText}>{meal.food_description}</Text>
         )}
       </View>
 
@@ -212,7 +210,7 @@ export default function NutritionResultScreen() {
         onPress={() =>
           navigation.navigate('AdherenceDashboard', {
             memberId,
-            memberName: meal.member_name ?? 'Member',
+            memberName,
           })
         }
       >

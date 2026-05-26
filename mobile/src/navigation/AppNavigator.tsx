@@ -15,8 +15,8 @@ export type RootStackParamList = {
   Login: undefined;
   MemberList: undefined;
   ProgramOverview: { memberId: string; memberName: string; programId?: string };
-  MealCapture: { memberId: string; programId?: string };
-  NutritionResult: { memberId: string; mealId: string };
+  MealCapture: { memberId: string; memberName: string; programId?: string };
+  NutritionResult: { memberId: string; mealId: string; memberName: string };
   AdherenceDashboard: { memberId: string; memberName: string };
 };
 

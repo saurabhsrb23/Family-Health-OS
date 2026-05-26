@@ -925,6 +925,304 @@ Cloud Scheduler fires `POST /api/v1/members/*/summaries/generate` at 23:00 IST e
 
 ---
 
+## 11. UI/UX Design — User Flows & Wireframes
+
+### 11.1 User Flow A — Enrollment (Add Member → Create Program)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      ENROLLMENT FLOW                        │
+└─────────────────────────────────────────────────────────────┘
+
+  [Login Screen]
+       │
+       ▼
+  [Member List]  ──── tap "+ Add Member" ────►  [Add Member Form]
+                                                      │
+                                              ┌───────┴────────┐
+                                              │  Name          │
+                                              │  Relationship  │
+                                              │  Date of Birth │
+                                              │  Gender        │
+                                              │  Phone         │
+                                              └───────┬────────┘
+                                                      │ tap "Save"
+                                                      ▼
+                                              [Create Program]
+                                                      │
+                                              ┌───────┴────────┐
+                                              │  Program Title │
+                                              │  Start Date    │
+                                              │  Duration: 90d │
+                                              └───────┬────────┘
+                                                      │ tap "Configure"
+                                                      ▼
+                                         [Configure Components]
+                                                      │
+                                          ┌───────────┼───────────┐
+                                          ▼           ▼           ▼
+                                    [Nutrition]  [Strength]  [Clinical]
+                                    Cal target   Sessions    BP checks
+                                    Protein goal Duration    Weight log
+                                          │           │           │
+                                          └───────────┴───────────┘
+                                                      │ tap "Launch Program"
+                                                      ▼
+                                              [Program Overview]
+                                              Day 1 · Phase 1
+                                              All components active
+```
+
+---
+
+### 11.2 User Flow B — Daily Use (Log Meal → View AI Result → Check Progress)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      DAILY USE FLOW                         │
+└─────────────────────────────────────────────────────────────┘
+
+  [Member List]
+       │ tap member card
+       ▼
+  [Program Overview]
+       │ tap green "+" FAB
+       ▼
+  [Meal Capture Screen]
+       │
+       ├─── Select Meal Type: [Breakfast] [Lunch] [Dinner] [Snack]
+       │
+       ├─── [📷 Take Photo]  or  [🖼 Gallery]
+       │         │                    │
+       │         └────────┬───────────┘
+       │                  ▼
+       │          [Image Preview (4:3)]
+       │
+       │ tap "✨ Analyze Meal"
+       ▼
+  [Uploading… → Analyzing with AI…]  (2s mock delay)
+       │
+       │  polls GET /meals/{id}/status every 2s
+       │  until extraction_status = "completed"
+       ▼
+  [Nutrition Result Screen]
+       │
+       ├── ✅ Meal Logged!
+       ├── Calories: 650 kcal (large display)
+       ├── Protein: 38g  Carbs: 72g  Fat: 18g
+       ├── Food: "Grilled chicken rice bowl..."
+       │
+       └── Today's Protein Progress bar
+           38g / 60g target  → 63% (⚠ Partial)
+       │
+       ├── [📷 Log Another Meal]
+       └── [📊 View Dashboard] ──────────────────►  [Adherence Dashboard]
+```
+
+---
+
+### 11.3 Key Screen Wireframes
+
+#### Screen 1 — Member List
+
+```
+┌──────────────────────────────────┐
+│ Family Health OS      [Sign Out] │
+├──────────────────────────────────┤
+│ 2 members                        │
+│                                  │
+│ ┌──────────────────────────────┐ │
+│ │ 🟢 R   Rahul Sharma          │ │
+│ │        [self]  39 yrs        │ │
+│ │                              │ │
+│ │ Rahul's 90-Day Transformation│ │
+│ │ Day 31 · 59 days left        │ │
+│ │ ████████████░░░░░░░░  34%    │ │
+│ │                              │ │
+│ │     [ 📷 Log Meal ]          │ │
+│ └──────────────────────────────┘ │
+│                                  │
+│ ┌──────────────────────────────┐ │
+│ │ 🟣 P   Priya Sharma          │ │
+│ │        [spouse]  36 yrs      │ │
+│ │                              │ │
+│ │ Priya's Wellness Journey     │ │
+│ │ Day 15 · 75 days left        │ │
+│ │ ████░░░░░░░░░░░░░░░░  17%    │ │
+│ │                              │ │
+│ │     [ 📷 Log Meal ]          │ │
+│ └──────────────────────────────┘ │
+└──────────────────────────────────┘
+```
+
+#### Screen 2 — Program Overview
+
+```
+┌──────────────────────────────────┐
+│ ◄  Rahul Sharma                  │
+├──────────────────────────────────┤
+│ ┌──────────────────────────────┐ │
+│ │ [Phase 2 — Build]  [active]  │ │
+│ │ Rahul's 90-Day Transformation│ │
+│ │                              │ │
+│ │          31                  │ │
+│ │        Day  of 90            │ │
+│ │ ████████░░░░░░░░░░░░  34%    │ │
+│ │ 59 days remaining            │ │
+│ └──────────────────────────────┘ │
+│                                  │
+│ ┌──────────────────────────────┐ │
+│ │ 🥗 Nutrition         [Met ✓] │ │
+│ │ Today's adherence            │ │
+│ │ ████████████████████  95%    │ │
+│ └──────────────────────────────┘ │
+│                                  │
+│ ┌──────────────────────────────┐ │
+│ │ 💪 Strength Training [Partial]│ │
+│ │ Today's adherence            │ │
+│ │ ██████████░░░░░░░░░░  65%    │ │
+│ └──────────────────────────────┘ │
+│                                  │
+│ ┌──────────────────────────────┐ │
+│ │ 🏥 Clinical Monitoring[Met ✓]│ │
+│ │ Today's adherence            │ │
+│ │ ████████████████████  90%    │ │
+│ └──────────────────────────────┘ │
+│                                  │
+│    [ 📊 View Full Dashboard ]    │
+│                                  │
+│                          [ + ]   │  ◄── FAB: Log Meal
+└──────────────────────────────────┘
+```
+
+#### Screen 3 — Meal Capture Flow
+
+```
+┌──────────────────────────────────┐
+│ ◄  Log Meal                      │
+├──────────────────────────────────┤
+│ Meal Type                        │
+│ ┌────┐ ┌────┐ ┌────┐ ┌────┐     │
+│ │ 🌅 │ │ ☀️ │ │ 🌙 │ │ 🍎 │     │
+│ │Brek│ │Lnch│ │Dinr│ │Snck│     │
+│ └────┘ └────┘ └────┘ └────┘     │
+│  (active border on selected)     │
+│                                  │
+│ ┌──────────────────────────────┐ │
+│ │                              │ │
+│ │   [Photo Preview 4:3]        │ │
+│ │   or  🍽️  No photo selected  │ │
+│ │                              │ │
+│ └──────────────────────────────┘ │
+│                                  │
+│  [ 📷 Take Photo ] [🖼 Gallery ] │
+│                                  │
+│  ┌────────────────────────────┐  │
+│  │     ✨ Analyze Meal        │  │  ◄── green, appears after photo
+│  └────────────────────────────┘  │
+│                                  │
+│  ⟳ Uploading… / Analyzing…      │  ◄── spinner while processing
+│                                  │
+│  AI will identify foods and      │
+│  extract nutritional data.       │
+└──────────────────────────────────┘
+
+          ▼ after ~2 seconds
+
+┌──────────────────────────────────┐
+│ ◄  Nutrition Result              │
+├──────────────────────────────────┤
+│ ┌──────────────────────────────┐ │
+│ │    ✅  Meal Logged!           │ │
+│ │       [ LUNCH ]              │ │
+│ │ Grilled chicken rice bowl... │ │
+│ └──────────────────────────────┘ │
+│                                  │
+│ ┌──────────────────────────────┐ │
+│ │ Total Calories               │ │
+│ │          650                 │ │
+│ │          kcal                │ │
+│ └──────────────────────────────┘ │
+│                                  │
+│ ┌──────────────────────────────┐ │
+│ │ Macronutrients               │ │
+│ │  38g      72g       18g      │ │
+│ │ Protein  Carbs      Fat      │ │
+│ └──────────────────────────────┘ │
+│                                  │
+│ ┌──────────────────────────────┐ │
+│ │ Today's Progress             │ │
+│ │ Protein         38g / 60g    │ │
+│ │ ████████████░░░░░░░░  63%    │ │
+│ │ [⚠ Partial]                  │ │
+│ └──────────────────────────────┘ │
+│                                  │
+│  [ 📷 Log Another Meal ]         │
+│  [ 📊 View Dashboard ]           │
+└──────────────────────────────────┘
+```
+
+#### Screen 4 — Adherence Dashboard
+
+```
+┌──────────────────────────────────┐
+│ ◄  Rahul Sharma                  │
+│    Week 5 of 13                  │
+├──────────────────────────────────┤
+│ ┌──────────────────────────────┐ │
+│ │           82%                │ │  ◄── large score, green
+│ │       [ On Track ✓ ]         │ │
+│ │        ↑ Improving           │ │
+│ │ Nutrition 40%·Strength 40%   │ │
+│ │       ·Clinical 20%          │ │
+│ └──────────────────────────────┘ │
+│                                  │
+│ ┌──────────────────────────────┐ │
+│ │ 🥗 Nutrition                 │ │
+│ │ Calories  1,950 / 2,000 kcal │ │
+│ │ ████████████████████  98%    │ │
+│ │ Protein   58g / 60g          │ │
+│ │ ██████████████████░░  97%    │ │
+│ │ ↑ Improving                  │ │
+│ └──────────────────────────────┘ │
+│                                  │
+│ ┌──────────────────────────────┐ │
+│ │ 💪 Strength                  │ │
+│ │ Sessions this week   4 / 4   │ │
+│ │ ████████████████████ 100%    │ │
+│ │ 7-Day Trend                  │ │
+│ │  █  █  █  █  █  █  █        │ │
+│ │  M  T  W  T  F  S  S        │ │
+│ │ ● Met  ● Partial  ● Missed  │ │
+│ └──────────────────────────────┘ │
+│                                  │
+│ ┌──────────────────────────────┐ │
+│ │ 🏥 Clinical                  │ │
+│ │ Measurements this week  5/5  │ │
+│ │ ████████████████████ 100%    │ │
+│ │  Latest BP  │  Weight        │ │
+│ │   118/76    │   --           │ │
+│ └──────────────────────────────┘ │
+└──────────────────────────────────┘
+```
+
+---
+
+### 11.4 Design Decisions
+
+| Decision | Choice | Rationale |
+|---|---|---|
+| Navigation pattern | Flat Stack (no tabs) | Health tracking is task-flow, not tab-switching; reduces accidental navigation |
+| Color system | Single green (#10B981) accent | Green = health/wellness; per-relationship colors for member avatars |
+| Progress bars | Custom View-based | No chart library dependency; fast render on low-end devices |
+| Loading states | Full-screen spinner + inline ActivityIndicator | Never show blank screen; every async operation has visual feedback |
+| Error states | Retry buttons on every screen | Network failures are common on mobile; never dead-end the user |
+| FAB placement | Bottom-right on Program Overview | Most frequent action (log meal) always one tap away |
+| Polling vs WebSocket | Polling (2s interval, max 30 polls) | Simpler for prototype; WebSocket for production at scale |
+| Pull-to-refresh | All list screens | Standard mobile UX pattern; reduces need for auto-refresh |
+
+---
+
 *Document version: 1.0 — written at completion of Modules 1–10 (backend + mobile app)*
 *Author: Founding Full-Stack Engineer take-home assignment*
 *Stack: Python + FastAPI + PostgreSQL + Redis + React Native + GCP*

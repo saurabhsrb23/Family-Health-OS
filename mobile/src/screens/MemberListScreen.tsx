@@ -42,7 +42,7 @@ export default function MemberListScreen() {
     setError('');
     try {
       const res = await membersAPI.list();
-      setMembers(res.data.items ?? res.data);
+      setMembers(res.data.data ?? res.data.items ?? res.data);
     } catch {
       setError('Could not load family members. Check your connection.');
     } finally {
@@ -101,13 +101,14 @@ export default function MemberListScreen() {
           onPress={() =>
             navigation.navigate('ProgramOverview', {
               memberId: item.id,
-              memberName: item.full_name,
+              memberName: item.name,
               programId: item.active_program?.id,
             })
           }
           onMealPress={() =>
             navigation.navigate('MealCapture', {
               memberId: item.id,
+              memberName: item.name,
               programId: item.active_program?.id,
             })
           }

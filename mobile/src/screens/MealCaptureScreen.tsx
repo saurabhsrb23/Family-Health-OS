@@ -8,6 +8,7 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -43,10 +44,11 @@ const MEAL_TYPES: { key: MealType; label: string; emoji: string }[] = [
 export default function MealCaptureScreen() {
   const route = useRoute<Route>();
   const navigation = useNavigation<Nav>();
-  const { memberId, programId } = route.params;
+  const { memberId, memberName, programId } = route.params;
 
   const [mealType, setMealType] = useState<MealType>('lunch');
   const [imageUri, setImageUri] = useState<string | null>(null);
+  const [imageMime, setImageMime] = useState<string>('image/jpeg');
   const [uploadStatus, setUploadStatus] = useState<
     'idle' | 'uploading' | 'analyzing' | 'error'
   >('idle');
@@ -78,7 +80,9 @@ export default function MealCaptureScreen() {
       : await ImagePicker.launchImageLibraryAsync(options);
 
     if (!result.canceled && result.assets[0]) {
-      setImageUri(result.assets[0].uri);
+      const asset = result.assets[0];
+      setImageUri(asset.uri);
+      setImageMime(asset.mimeType ?? 'image/jpeg');
       setErrorMsg('');
     }
   };
@@ -89,10 +93,10 @@ export default function MealCaptureScreen() {
       count++;
       try {
         const res = await mealsAPI.getStatus(memberId, mealId);
-        const status: string = res.data.status;
+        const status: string = res.data.extraction_status;
         if (status === 'completed') {
           clearInterval(pollRef.current!);
-          navigation.replace('NutritionResult', { memberId, mealId });
+          navigation.replace('NutritionResult', { memberId, memberName, mealId });
         } else if (status === 'failed') {
           clearInterval(pollRef.current!);
           setUploadStatus('error');
@@ -115,11 +119,16 @@ export default function MealCaptureScreen() {
     setErrorMsg('');
     try {
       const filename = imageUri.split('/').pop() ?? 'meal.jpg';
-      const ext = filename.split('.').pop()?.toLowerCase() ?? 'jpg';
-      const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
-
       const formData = new FormData();
-      formData.append('file', { uri: imageUri, name: filename, type: mimeType } as any);
+      if (Platform.OS === 'web') {
+        // Web/browser: fetch the URI and convert to Blob
+        const blobRes = await fetch(imageUri);
+        const blob = await blobRes.blob();
+        formData.append('photo', blob, filename);
+      } else {
+        // Native iOS/Android: React Native FormData accepts { uri, name, type }
+        formData.append('photo', { uri: imageUri, name: filename, type: imageMime } as any);
+      }
       formData.append('meal_type', mealType);
       formData.append('logged_at', new Date().toISOString());
       if (programId) formData.append('program_id', programId);

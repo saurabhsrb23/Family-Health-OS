@@ -3,15 +3,15 @@ import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
 
 interface ActiveProgram {
   id: string;
-  name: string;
+  title: string;
   day_number: number;
   days_remaining: number;
 }
 
 interface Member {
   id: string;
-  full_name: string;
-  relationship_type: string;
+  name: string;
+  relationship: string;
   date_of_birth?: string;
   active_program?: ActiveProgram | null;
 }
@@ -37,21 +37,21 @@ const RELATION_COLORS: Record<string, string> = {
 };
 
 export default function MemberCard({ member, onPress, onMealPress }: Props) {
-  const color = RELATION_COLORS[member.relationship_type] ?? '#6B7280';
+  const color = RELATION_COLORS[member.relationship] ?? '#6B7280';
   const prog = member.active_program;
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
       <View style={styles.header}>
         <View style={[styles.avatar, { backgroundColor: color }]}>
-          <Text style={styles.avatarText}>{member.full_name[0].toUpperCase()}</Text>
+          <Text style={styles.avatarText}>{member.name[0].toUpperCase()}</Text>
         </View>
         <View style={styles.info}>
-          <Text style={styles.name}>{member.full_name}</Text>
+          <Text style={styles.name}>{member.name}</Text>
           <View style={styles.meta}>
             <View style={[styles.badge, { backgroundColor: color + '20' }]}>
               <Text style={[styles.badgeText, { color }]}>
-                {member.relationship_type}
+                {member.relationship}
               </Text>
             </View>
             {member.date_of_birth && (
@@ -63,7 +63,7 @@ export default function MemberCard({ member, onPress, onMealPress }: Props) {
 
       {prog ? (
         <View style={styles.programBox}>
-          <Text style={styles.programName} numberOfLines={1}>{prog.name}</Text>
+          <Text style={styles.programName} numberOfLines={1}>{prog.title}</Text>
           <Text style={styles.programDay}>Day {prog.day_number} · {prog.days_remaining} days left</Text>
           <View style={styles.track}>
             <View

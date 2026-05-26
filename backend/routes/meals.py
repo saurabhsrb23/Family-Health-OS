@@ -31,8 +31,13 @@ from utils.security import get_current_user
 router = APIRouter(tags=["Meal Logs"])
 logger = logging.getLogger(__name__)
 
-ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/jpg", "image/png"}
-ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png"}
+ALLOWED_IMAGE_TYPES = {
+    "image/jpeg", "image/jpg", "image/png",
+    "image/heic", "image/heif",   # iPhone default format
+    "image/webp",                  # Android default
+    "image/gif",
+}
+ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".heic", ".heif", ".webp", ".gif"}
 
 
 # ── POST /members/{member_id}/meals ──────────────────────────────────────────
@@ -48,7 +53,7 @@ async def upload_meal(
     photo: UploadFile = File(..., description="Meal photo (jpg/jpeg/png)"),
     meal_type: str = Form(..., description="breakfast | lunch | dinner | snack"),
     logged_at: str = Form(..., description="ISO datetime e.g. 2026-05-26T08:00:00"),
-    program_id: str = Form(..., description="UUID of the care program"),
+    program_id: str | None = Form(None, description="UUID of the care program"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -109,7 +114,7 @@ async def upload_meal(
 
     # Create meal log record
     meal_log = MealLog(
-        program_id=UUID(program_id),
+        program_id=UUID(program_id) if program_id else None,
         member_id=member_id,
         photo_url=photo_url,
         photo_key=photo_key,

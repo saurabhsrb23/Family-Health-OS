@@ -74,7 +74,7 @@ export default function ProgramOverviewScreen() {
       } else {
         // No programId passed — fetch list and use first active
         const res = await programsAPI.list(memberId);
-        const all: any[] = res.data.items ?? res.data;
+        const all: any[] = res.data.data ?? res.data.items ?? res.data;
         prog = all.find((p) => p.status === 'active') ?? all[0] ?? null;
       }
       setProgram(prog);
@@ -111,9 +111,13 @@ export default function ProgramOverviewScreen() {
   const components: any[] = program.components ?? [];
 
   // Map adherence rates per component type from the report
+  // Backend: nutrition.today_adherence_pct, strength/clinical.week_adherence_pct
   const rateFor = (type: string): number => {
     if (!adherence) return 0;
-    return adherence[type]?.adherence_rate ?? 0;
+    if (type === 'nutrition') return adherence.nutrition?.today_adherence_pct ?? 0;
+    if (type === 'strength') return adherence.strength?.week_adherence_pct ?? 0;
+    if (type === 'clinical') return adherence.clinical?.week_adherence_pct ?? 0;
+    return 0;
   };
 
   return (
@@ -147,7 +151,7 @@ export default function ProgramOverviewScreen() {
               </Text>
             </View>
           </View>
-          <Text style={styles.programName}>{program.name}</Text>
+          <Text style={styles.programName}>{program.title ?? program.name}</Text>
 
           {/* Day progress */}
           <View style={styles.dayRow}>
@@ -206,7 +210,7 @@ export default function ProgramOverviewScreen() {
       {/* FAB — Log Meal */}
       <TouchableOpacity
         style={styles.fab}
-        onPress={() => navigation.navigate('MealCapture', { memberId, programId })}
+        onPress={() => navigation.navigate('MealCapture', { memberId, memberName, programId })}
         activeOpacity={0.85}
       >
         <Text style={styles.fabText}>+</Text>

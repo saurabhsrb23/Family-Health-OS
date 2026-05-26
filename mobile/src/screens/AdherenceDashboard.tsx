@@ -90,26 +90,23 @@ const barStyles = StyleSheet.create({
   dayLabel: { fontSize: 10, color: COLORS.textSecondary, marginTop: 4 },
 });
 
-// Build 7-bar data from rolling adherence
+// Build 7-bar data from rolling adherence — backend returns days: [{date, adherence_pct}]
 function buildBars(rolling: any): { pct: number; color: string }[] {
-  if (!rolling) {
-    return Array(7).fill({ pct: 0, color: COLORS.border });
-  }
-  // Use last_3_days_avg for last 3 bars, prior_4_days_avg for first 4
-  const prior = rolling.prior_4_days_avg ?? 0;
-  const recent = rolling.last_3_days_avg ?? 0;
   const barColor = (pct: number) =>
     pct >= 80 ? COLORS.primary : pct >= 40 ? COLORS.warning : COLORS.danger;
+  const fallback = (pct: number) => ({ pct, color: barColor(pct) });
 
-  return [
-    { pct: prior, color: barColor(prior) },
-    { pct: prior, color: barColor(prior) },
-    { pct: prior, color: barColor(prior) },
-    { pct: prior, color: barColor(prior) },
-    { pct: recent, color: barColor(recent) },
-    { pct: recent, color: barColor(recent) },
-    { pct: recent, color: barColor(recent) },
-  ];
+  if (!rolling) return Array(7).fill({ pct: 0, color: COLORS.border });
+
+  const days: any[] = rolling.days ?? [];
+  if (days.length > 0) {
+    const last7 = days.slice(-7);
+    const padded = Array(7 - last7.length).fill({ pct: 0, color: COLORS.border });
+    return [...padded, ...last7.map((d: any) => fallback(d.adherence_pct ?? 0))];
+  }
+
+  const avg = rolling.average_pct ?? 0;
+  return Array(7).fill(fallback(avg));
 }
 
 export default function AdherenceDashboard() {
@@ -136,10 +133,10 @@ export default function AdherenceDashboard() {
 
   if (loading) return <LoadingOverlay visible message="Loading dashboard…" />;
 
-  const score = report?.overall_score ?? 0;
+  const score = report?.overall_pct ?? 0;
   const sColor = scoreColor(score);
   const sLabel = scoreLabel(score);
-  const rolling = report?.rolling_adherence;
+  const rolling = report?.nutrition?.rolling_7day ?? report?.strength?.rolling_7day;
   const nutrition = report?.nutrition ?? {};
   const strength = report?.strength ?? {};
   const clinical = report?.clinical ?? {};
@@ -169,7 +166,7 @@ export default function AdherenceDashboard() {
 
       {/* Overall score card */}
       <View style={styles.scoreCard}>
-        <Text style={styles.scoreBig} style={{ color: sColor } as any}>
+        <Text style={[styles.scoreBig, { color: sColor }]}>
           {Math.round(score)}%
         </Text>
         <View style={[styles.labelBadge, { backgroundColor: sLabel.bg }]}>
@@ -193,24 +190,24 @@ export default function AdherenceDashboard() {
         <View style={styles.dataRow}>
           <Text style={styles.dataLabel}>Calories</Text>
           <Text style={styles.dataValue}>
-            {nutrition.actual_calories ?? '--'} / {nutrition.target_calories ?? '--'} kcal
+            {nutrition.today_calories_actual ?? '--'} / {nutrition.today_calories_target ?? '--'} kcal
           </Text>
         </View>
         <ProgressBar
-          value={nutrition.adherence_rate ?? 0}
+          value={nutrition.today_adherence_pct ?? 0}
           color={COLORS.primary}
           showLabel={false}
         />
-        <View style={styles.dataRow} style={{ marginTop: 12 } as any}>
+        <View style={[styles.dataRow, { marginTop: 12 }]}>
           <Text style={styles.dataLabel}>Protein</Text>
           <Text style={styles.dataValue}>
-            {nutrition.actual_protein_g ?? '--'} / {nutrition.target_protein_g ?? '--'} g
+            {nutrition.today_protein_actual ?? '--'} / {nutrition.today_protein_target ?? '--'} g
           </Text>
         </View>
         <ProgressBar
           value={
-            nutrition.target_protein_g
-              ? Math.min(100, ((nutrition.actual_protein_g ?? 0) / nutrition.target_protein_g) * 100)
+            nutrition.today_protein_target
+              ? Math.min(100, ((nutrition.today_protein_actual ?? 0) / nutrition.today_protein_target) * 100)
               : 0
           }
           color={COLORS.primary}
@@ -229,11 +226,11 @@ export default function AdherenceDashboard() {
         <View style={styles.dataRow}>
           <Text style={styles.dataLabel}>Sessions this week</Text>
           <Text style={styles.dataValue}>
-            {strength.sessions_completed ?? '--'} / {strength.sessions_target ?? '--'}
+            {strength.sessions_this_week ?? '--'} / {strength.target_sessions ?? '--'}
           </Text>
         </View>
         <ProgressBar
-          value={strength.adherence_rate ?? 0}
+          value={strength.week_adherence_pct ?? 0}
           color="#3B82F6"
           showLabel={false}
         />
@@ -259,11 +256,11 @@ export default function AdherenceDashboard() {
         <View style={styles.dataRow}>
           <Text style={styles.dataLabel}>Measurements this week</Text>
           <Text style={styles.dataValue}>
-            {clinical.measurements_taken ?? '--'} / {clinical.measurements_target ?? '--'}
+            {clinical.measurements_this_week ?? '--'} / {clinical.target_measurements ?? '--'}
           </Text>
         </View>
         <ProgressBar
-          value={clinical.adherence_rate ?? 0}
+          value={clinical.week_adherence_pct ?? 0}
           color="#8B5CF6"
           showLabel={false}
         />
